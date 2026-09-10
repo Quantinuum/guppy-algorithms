@@ -126,24 +126,20 @@ release event created with `GITHUB_TOKEN` does not trigger another workflow. See
 
 Review the version and changelog in the release PR, mark it ready, and merge it
 once all required checks pass. Release Please creates the tag and GitHub release.
-The separate `Build wheels` workflow then builds and checks distributions on
-Ubuntu x64, Ubuntu ARM, macOS ARM, macOS Intel, and Windows using Python 3.12.
-It also builds on pushes to `main` and `release-please--*` branches, and supports
-manual runs. Branch runs only validate; publication requires a published release
-or a manual run selecting a version tag. The unpublished `0.0.0` baseline is
-rejected for publication, and the tag must match the package and manifest versions.
+The separate `Build wheels` workflow runs after that published release, or when a
+maintainer manually selects an existing version tag for a rehearsal or retry. The
+unpublished `0.0.0` baseline is rejected, and the tag must match the package and
+manifest versions.
 
 `guppyalgos` is pure Python, so `uv build` produces a universal `py3-none-any` wheel
-and a source archive. Every runner validates both distributions with Twine; the
-Ubuntu x64 job also installs its wheel and compiles a Guppy program. This matrix
-checks packaging across platforms, not native runtime compatibility on every OS.
-Cargo caching and `cibuildwheel` are unnecessary for this package.
+and a source archive. One Ubuntu job validates both distributions with Twine,
+installs the wheel, and compiles a Guppy program. The normal CI matrix tests each
+supported Python version; Cargo caching and `cibuildwheel` are unnecessary.
 
-Once all builds pass, review the artifacts and approve the `pypi` environment
-job. It attaches the Ubuntu-built wheel and source archive to the GitHub release
-and publishes those same files to PyPI with attestations. The other builds have
-the same distribution filenames and are retained as CI artifacts, not merged
-into the upload directory. Artifacts are retained for 30 days.
+Once the build passes, review the artifacts and approve the `pypi` environment
+job. It attaches the validated wheel and source archive to the GitHub release and
+publishes those same files to PyPI with attestations. Artifacts are retained for
+30 days.
 
 For a failed publication, rerun the failed jobs or manually run `Build wheels`
 against the same version tag. `skip-existing: true` allows PyPI retries, and

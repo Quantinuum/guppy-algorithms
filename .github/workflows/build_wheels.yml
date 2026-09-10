@@ -1,31 +1,29 @@
 name: Build wheels
 
 on:
-  push:
-    branches:
-      - main
-      - "release-please--*"
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to build and publish, for example v0.1.0
+        required: true
+        type: string
 
 permissions:
   contents: read
 
 concurrency:
-  group: build-wheels-${{ github.ref }}
+  group: build-wheels-${{ github.event.release.tag_name || inputs.tag }}
   cancel-in-progress: false
 
 jobs:
   build_wheels:
-    name: ${{ matrix.os }} wheels
-    runs-on: ${{ matrix.os }}
+    # Run after Release Please publishes a release, or against a tag selected by
+    # a maintainer for a rehearsal or retry. Ordinary commits use ci.yml instead.
+    name: Build release distributions
+    runs-on: ubuntu-latest
     timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      matrix:
-        # macos-15-intel is x86_64; macos-latest is Apple silicon.
-        os: [ubuntu-latest, ubuntu-22.04-arm, macos-latest, macos-15-intel, windows-latest]
     defaults:
       run:
         shell: bash
@@ -34,6 +32,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 1
+          ref: ${{ github.event.release.tag_name || inputs.tag }}
           persist-credentials: false
       - name: Set up uv
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
@@ -42,9 +41,8 @@ jobs:
           python-version: "3.12"
           enable-cache: true
       - name: Validate the release version
-        if: (github.event_name == 'release' || github.event_name == 'workflow_dispatch') && github.ref_type == 'tag'
         env:
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
         run: |
           python - <<'PY'
           import json
@@ -78,8 +76,10 @@ jobs:
           if len(sources) != 1:
               raise SystemExit("Expected one guppyalgos source distribution")
           PY
+      # guppyalgos is pure Python: uv build creates a py3-none-any wheel. One
+      # Ubuntu build avoids five identical distributions; ci.yml tests the
+      # supported Python versions independently.
       - name: Smoke-test the installed wheel
-        if: matrix.os == 'ubuntu-latest'
         run: |
           uv venv "$RUNNER_TEMP/wheel-test"
           uv pip install --python "$RUNNER_TEMP/wheel-test/bin/python" wheelhouse/*.whl
@@ -88,7 +88,7 @@ jobs:
       - name: Upload distributions
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: wheels-${{ matrix.os }}
+          name: release-distributions
           path: |
             wheelhouse/guppyalgos-*.whl
             wheelhouse/guppyalgos-*.tar.gz
@@ -100,7 +100,7 @@ jobs:
     name: Release wheels
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    if: (github.event_name == 'release' || github.event_name == 'workflow_dispatch') && github.ref_type == 'tag' && !github.event.repository.private
+    if: ${{ !github.event.repository.private }}
     needs: [build_wheels]
     # Configure required reviewers and allow version tags in this environment.
     environment:
@@ -110,16 +110,15 @@ jobs:
       contents: write
       id-token: write
     steps:
-      # Every runner builds a universal wheel with the same filename. Publish the
-      # Ubuntu build once, after the complete matrix has passed.
+      # Download the exact validated artifacts from the preceding build job.
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          name: wheels-ubuntu-latest
+          name: release-distributions
           path: wheelhouse
       - name: Update GitHub release with artifacts
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3
         with:
-          tag_name: ${{ github.ref_name }}
+          tag_name: ${{ github.event.release.tag_name || inputs.tag }}
           files: |
             wheelhouse/guppyalgos-*.whl
             wheelhouse/guppyalgos-*.tar.gz
