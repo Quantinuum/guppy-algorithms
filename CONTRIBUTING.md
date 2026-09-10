@@ -89,62 +89,14 @@ The unpublished baseline is `0.0.0`. The initial release commit uses the footer
 `0.0.0`; review and merge the release PR when publication is ready. Reserve
 `Release-As: 1.0.0` for the deliberate decision to declare the public API stable.
 
-### Publishing setup (maintainers)
-
-Before merging the first public release PR:
-
-1. Keep the repository private during preparation. PyPI publication is disabled
-   while it is private. Make it public only when the release is approved.
-   In GitHub Actions settings, allow GitHub Actions to create pull requests. Protect
-   `main` with the required CI checks described above.
-2. Create a GitHub environment named `pypi`, add required reviewers, and allow
-   deployment tags matching `v*`. Publishing runs on version tags, not branches.
-   Environment protection is configured on GitHub; the workflow file alone does
-   not require approval.
-3. On PyPI, configure a GitHub Trusted Publisher for `guppyalgos` using:
-
-   | Field | Value |
-   | --- | --- |
-   | Owner | `Quantinuum` (use the actual owner if the repo moves) |
-   | Repository | `guppy-algorithms` |
-   | Workflow filename | `build_wheels.yml` |
-   | Environment | `pypi` |
-
-   For an existing project, use its Publishing settings. For the first release of
-   a new project, configure a pending publisher under your PyPI account's Publishing
-   settings. See the [PyPI Trusted Publishing guide](https://docs.pypi.org/trusted-publishers/).
-
-PyPI publishing uses Trusted Publishing and needs no PyPI API token. The separate
-Release Please workflow currently uses the `HUGRBOT_PAT` GitHub secret so its
-release events can trigger `build_wheels.yml`. Keep that token (or a GitHub App
-installation token) when using this event-based setup. Replacing it with
-`GITHUB_TOKEN` would require explicit dispatch of the build workflow, because a
-release event created with `GITHUB_TOKEN` does not trigger another workflow. See
-[GitHub's token behavior](https://docs.github.com/en/actions/concepts/security/github_token).
-
 ### Publishing a release
 
-Review the version and changelog in the release PR, mark it ready, and merge it
-once all required checks pass. Release Please creates the tag and GitHub release.
-The separate `Build wheels` workflow runs after that published release, or when a
-maintainer manually selects an existing version tag for a rehearsal or retry. The
-unpublished `0.0.0` baseline is rejected, and the tag must match the package and
-manifest versions.
+1. Review and merge the Release Please PR. It creates the version tag and GitHub
+   release.
+2. `Build wheels` validates the universal wheel and source archive. It starts from
+   the published release, or can be run manually for an existing version tag.
+3. The `pypi` job attaches them to the GitHub release and publishes them to PyPI.
 
-`guppyalgos` is pure Python, so `uv build` produces a universal `py3-none-any` wheel
-and a source archive. One Ubuntu job validates both distributions with Twine,
-installs the wheel, and compiles a Guppy program. The normal CI matrix tests each
-supported Python version; Cargo caching and `cibuildwheel` are unnecessary.
-
-Once the build passes, review the artifacts and approve the `pypi` environment
-job. It attaches the validated wheel and source archive to the GitHub release and
-publishes those same files to PyPI with attestations. Artifacts are retained for
-30 days.
-
-For a failed publication, rerun the failed jobs or manually run `Build wheels`
-against the same version tag. `skip-existing: true` allows PyPI retries, and
-existing GitHub release assets are preserved. Already-published files cannot be
-replaced; if the source needs a correction, release a new version instead of
-moving the old tag.
-
-Documentation continues to build separately and is not deployed by this workflow.
+For a retry, manually rerun `Build wheels` for the same tag. Published PyPI files
+cannot be replaced; release a new version to correct a package. Documentation builds
+separately and is not deployed by this workflow.
