@@ -1,7 +1,7 @@
 # guppy-algorithms
 
 A library of reusable primitives for composing abstract quantum algorithms,
-written in [Guppy](https://github.com/Quantinuum/guppylang).
+written in [guppy](https://github.com/Quantinuum/guppylang).
 
 The `guppyalgos` package includes quantum arithmetic, state preparation, QROM,
 block encoding, Hamiltonian simulation, and phase estimation. It's reusable
@@ -25,7 +25,7 @@ uv sync
 Explore the [example notebooks](examples/) and the
 [getting-started guide](docs/getting-started.md) for usage and compilation examples.
 
-See [Documentation](https://docs.quantinuum.com/guppy/algorithms) for user guide.
+See [documentation](https://docs.quantinuum.com/guppy/algorithms) for user guide.
 
 ## Contributing
 
