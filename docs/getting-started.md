@@ -33,7 +33,7 @@ dependency. To contribute to the library or work from a source checkout, use
 the repository's locked environment instead:
 
 ```console
-git clone https://github.com/quantinuum-dev/guppy-algorithms.git
+git clone https://github.com/Quantinuum/guppy-algorithms.git
 cd guppy-algorithms
 uv sync --all-extras --dev
 ```

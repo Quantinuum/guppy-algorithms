@@ -47,7 +47,7 @@ body:
     id: version
     attributes:
       label: Version
-      description: "Output of `python -c \"import guppyalgos; print(guppyalgos.__version__)\"`"
+      description: "Output of `python -c \"from importlib.metadata import version; print(version('guppyalgos'))\"`"
       placeholder: "0.1.0"
     validations:
       required: false

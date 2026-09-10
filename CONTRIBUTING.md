@@ -59,8 +59,24 @@ uv run prek run --all-files
 ```
 
 Replace the example test path with the relevant files. For changes that affect the
-whole library, run `uv run pytest -n auto`. The hooks check formatting, lint,
-types, spelling, and file hygiene.
+whole library, follow the full-suite commands in [tests/README.md](tests/README.md).
+The hooks check formatting, lint, types, spelling, and file hygiene.
+
+## Continuous integration
+
+PRs targeting any branch run the same validation, including layers of a `gh stack`.
+CI checks code, tests Python 3.12–3.14, executes notebooks sequentially, builds the
+docs, and checks an installed wheel. Validation uses public dependencies and the
+read-only built-in GitHub token; contributors do not need CI secrets or a PAT.
+Vendored skill material is excluded from formatting and spelling hooks.
+
+The standalone `test-docs-build.yml` workflow provides the `Test sphinx docs` check.
+For branch protection, require `CI passed`, `Test sphinx docs`, and
+`Conventional Commit title`. `CI passed` covers the jobs in `ci.yml` and fails if
+any of them fails, is canceled, or is skipped. All three checks support the merge
+queue. Dependency review runs separately on every
+PR and rejects newly introduced high or critical severity vulnerabilities; keep
+it as a PR review gate, since it does not run on merge-queue events.
 
 ## Releases
 
@@ -72,3 +88,67 @@ The unpublished baseline is `0.0.0`. The initial release commit uses the footer
 `Release-As: 0.1.0` to request the first public release. Never publish or tag
 `0.0.0`; review and merge the release PR when publication is ready. Reserve
 `Release-As: 1.0.0` for the deliberate decision to declare the public API stable.
+
+### Publishing setup (maintainers)
+
+Before merging the first public release PR:
+
+1. Keep the repository private during preparation. PyPI publication is disabled
+   while it is private. Make it public only when the release is approved.
+   In GitHub Actions settings, allow GitHub Actions to create pull requests. Protect
+   `main` with the required CI checks described above.
+2. Create a GitHub environment named `pypi`, add required reviewers, and allow
+   deployment tags matching `v*`. Publishing runs on version tags, not branches.
+   Environment protection is configured on GitHub; the workflow file alone does
+   not require approval.
+3. On PyPI, configure a GitHub Trusted Publisher for `guppyalgos` using:
+
+   | Field | Value |
+   | --- | --- |
+   | Owner | `Quantinuum` (use the actual owner if the repo moves) |
+   | Repository | `guppy-algorithms` |
+   | Workflow filename | `build_wheels.yml` |
+   | Environment | `pypi` |
+
+   For an existing project, use its Publishing settings. For the first release of
+   a new project, configure a pending publisher under your PyPI account's Publishing
+   settings. See the [PyPI Trusted Publishing guide](https://docs.pypi.org/trusted-publishers/).
+
+PyPI publishing uses Trusted Publishing and needs no PyPI API token. The separate
+Release Please workflow currently uses the `HUGRBOT_PAT` GitHub secret so its
+release events can trigger `build_wheels.yml`. Keep that token (or a GitHub App
+installation token) when using this event-based setup. Replacing it with
+`GITHUB_TOKEN` would require explicit dispatch of the build workflow, because a
+release event created with `GITHUB_TOKEN` does not trigger another workflow. See
+[GitHub's token behavior](https://docs.github.com/en/actions/concepts/security/github_token).
+
+### Publishing a release
+
+Review the version and changelog in the release PR, mark it ready, and merge it
+once all required checks pass. Release Please creates the tag and GitHub release.
+The separate `Build wheels` workflow then builds and checks distributions on
+Ubuntu x64, Ubuntu ARM, macOS ARM, macOS Intel, and Windows using Python 3.12.
+It also builds on pushes to `main` and `release-please--*` branches, and supports
+manual runs. Branch runs only validate; publication requires a published release
+or a manual run selecting a version tag. The unpublished `0.0.0` baseline is
+rejected for publication, and the tag must match the package and manifest versions.
+
+`guppyalgos` is pure Python, so `uv build` produces a universal `py3-none-any` wheel
+and a source archive. Every runner validates both distributions with Twine; the
+Ubuntu x64 job also installs its wheel and compiles a Guppy program. This matrix
+checks packaging across platforms, not native runtime compatibility on every OS.
+Cargo caching and `cibuildwheel` are unnecessary for this package.
+
+Once all builds pass, review the artifacts and approve the `pypi` environment
+job. It attaches the Ubuntu-built wheel and source archive to the GitHub release
+and publishes those same files to PyPI with attestations. The other builds have
+the same distribution filenames and are retained as CI artifacts, not merged
+into the upload directory. Artifacts are retained for 30 days.
+
+For a failed publication, rerun the failed jobs or manually run `Build wheels`
+against the same version tag. `skip-existing: true` allows PyPI retries, and
+existing GitHub release assets are preserved. Already-published files cannot be
+replaced; if the source needs a correction, release a new version instead of
+moving the old tag.
+
+Documentation continues to build separately and is not deployed by this workflow.

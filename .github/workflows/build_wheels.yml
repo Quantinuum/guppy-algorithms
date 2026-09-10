@@ -1,0 +1,134 @@
+name: Build wheels
+
+on:
+  push:
+    branches:
+      - main
+      - "release-please--*"
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-wheels-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build_wheels:
+    name: ${{ matrix.os }} wheels
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        # macos-15-intel is x86_64; macos-latest is Apple silicon.
+        os: [ubuntu-latest, ubuntu-22.04-arm, macos-latest, macos-15-intel, windows-latest]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Set up uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          version: "0.11.3"
+          python-version: "3.12"
+          enable-cache: true
+      - name: Validate the release version
+        if: (github.event_name == 'release' || github.event_name == 'workflow_dispatch') && github.ref_type == 'tag'
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import re
+          import tomllib
+          from pathlib import Path
+
+          project = tomllib.loads(Path("pyproject.toml").read_text())["project"]
+          version = project["version"]
+          manifest = json.loads(Path(".release-please-manifest.json").read_text())
+          if project["name"] != "guppyalgos":
+              raise SystemExit("Unexpected package name")
+          if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", version) or version == "0.0.0":
+              raise SystemExit("Expected a stable release version above 0.0.0")
+          if os.environ["RELEASE_TAG"] != f"v{version}" or manifest["."] != version:
+              raise SystemExit("Release tag, package version, and manifest must match")
+          PY
+      - name: Build and validate guppyalgos distributions
+        run: |
+          uv lock --check
+          uv build --out-dir wheelhouse
+          uvx twine check --strict wheelhouse/*
+          python - <<'PY'
+          from pathlib import Path
+
+          wheels = list(Path("wheelhouse").glob("guppyalgos-*.whl"))
+          sources = list(Path("wheelhouse").glob("guppyalgos-*.tar.gz"))
+          if len(wheels) != 1 or not wheels[0].name.endswith("-py3-none-any.whl"):
+              raise SystemExit("Expected one universal guppyalgos wheel")
+          if len(sources) != 1:
+              raise SystemExit("Expected one guppyalgos source distribution")
+          PY
+      - name: Smoke-test the installed wheel
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          uv venv "$RUNNER_TEMP/wheel-test"
+          uv pip install --python "$RUNNER_TEMP/wheel-test/bin/python" wheelhouse/*.whl
+          cd "$RUNNER_TEMP"
+          "$RUNNER_TEMP/wheel-test/bin/python" "$GITHUB_WORKSPACE/.github/scripts/smoke_test_package.py"
+      - name: Upload distributions
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: wheels-${{ matrix.os }}
+          path: |
+            wheelhouse/guppyalgos-*.whl
+            wheelhouse/guppyalgos-*.tar.gz
+          if-no-files-found: error
+          overwrite: true
+          retention-days: 30
+
+  release:
+    name: Release wheels
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: (github.event_name == 'release' || github.event_name == 'workflow_dispatch') && github.ref_type == 'tag' && !github.event.repository.private
+    needs: [build_wheels]
+    # Configure required reviewers and allow version tags in this environment.
+    environment:
+      name: pypi
+      url: https://pypi.org/p/guppyalgos
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      # Every runner builds a universal wheel with the same filename. Publish the
+      # Ubuntu build once, after the complete matrix has passed.
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: wheels-ubuntu-latest
+          path: wheelhouse
+      - name: Update GitHub release with artifacts
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: |
+            wheelhouse/guppyalgos-*.whl
+            wheelhouse/guppyalgos-*.tar.gz
+          fail_on_unmatched_files: true
+          overwrite_files: false
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # release/v1
+        with:
+          packages-dir: wheelhouse/
+          attestations: true
+          verbose: true
+          skip-existing: true

@@ -1,6 +1,6 @@
 # guppyalgos documentation
 
-[Guppy Algorithms](https://github.com/quantinuum-dev/guppy-algorithms) is an
+[Guppy Algorithms](https://github.com/Quantinuum/guppy-algorithms) is an
 alpha library of reusable quantum-algorithm components built on the
 [Guppy language framework](https://docs.quantinuum.com/guppy/). It combines
 type-safe Guppy primitives with Python builders for algorithms that start from

@@ -7,13 +7,17 @@ The `guppyalgos` package includes quantum arithmetic, state preparation, QROM,
 block encoding, Hamiltonian simulation, and phase estimation. Its reusable
 components let you choose circuit implementations when assembling an algorithm.
 
+The API is experimental before version 1.0 and may change between releases.
+Pin the package version for reproducible work and review the
+[changelog](CHANGELOG.md) before upgrading.
+
 ## Getting started
 
 Requires Python 3.12 or newer and [uv](https://docs.astral.sh/uv/).
 Install from a source checkout:
 
 ```sh
-git clone https://github.com/quantinuum-dev/guppy-algorithms.git
+git clone https://github.com/Quantinuum/guppy-algorithms.git
 cd guppy-algorithms
 uv sync
 ```
@@ -21,10 +25,17 @@ uv sync
 Explore the [example notebooks](examples/) and the
 [getting-started guide](docs/getting-started.md) for usage and compilation examples.
 
+Deployed documentation URL: TBA.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, checks, and our
 `gh stack` workflow for stacked pull requests.
+
+## Citation
+
+If you use this library in research, please cite it using [CITATION.cff](CITATION.cff)
+and include the version or commit you used.
 
 ## License
 

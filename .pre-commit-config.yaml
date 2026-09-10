@@ -1,4 +1,4 @@
-exclude: ^docs/_build/
+exclude: ^(docs/(_build|build)/|agents/skills/)
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks

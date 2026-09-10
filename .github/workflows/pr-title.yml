@@ -1,19 +1,35 @@
-name: Check Conventional Commits format
+name: PR title
+
 on:
-  pull_request_target:
-    branches:
-      - main
-    types:
-      - opened
-      - edited
-      - synchronize
-      - labeled
-      - unlabeled
+  pull_request:
+    types: [opened, edited, synchronize, reopened, ready_for_review]
   merge_group:
     types: [checks_requested]
 
+permissions: {}
+
 jobs:
-    check-title:
-        uses: Quantinuum/hugrverse-actions/.github/workflows/pr-title.yml@main
-        secrets:
-            GITHUB_PAT: ${{ secrets.HUGRBOT_PAT }}
+  check-title:
+    name: Conventional Commit title
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # Read only event metadata; do not check out or execute PR code.
+      # Merge queue entries have already passed the PR title check.
+      - name: Validate title
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          python3 - <<'PYTHON'
+          import os
+          import re
+          import sys
+
+          if os.environ["EVENT_NAME"] == "merge_group":
+              sys.exit(0)
+          pattern = r"(?:feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(?:\([^()\r\n]+\))?!?: \S[^\r\n]*"
+          if not re.fullmatch(pattern, os.environ["PR_TITLE"]):
+              print("Use a Conventional Commit title, for example: feat: add an algorithm")
+              sys.exit(1)
+          PYTHON

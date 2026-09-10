@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+message: "If you use this library in research, please cite it and include the version or commit you used."
+type: software
+title: guppy-algorithms
+abstract: Reusable primitives for composing abstract quantum algorithms in Guppy.
+authors:
+  - family-names: Fitzpatrick
+    given-names: Nathan
+repository-code: "https://github.com/Quantinuum/guppy-algorithms"
+license: Apache-2.0
+keywords:
+  - quantum computing
+  - quantum algorithms
+  - Guppy

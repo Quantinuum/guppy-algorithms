@@ -62,10 +62,10 @@ where = ["."]
 include = ["guppyalgos", "guppyalgos.*"]
 
 [project.urls]
-Repository = "https://github.com/quantinuum-dev/guppy-algorithms"
-Documentation = "https://github.com/quantinuum-dev/guppy-algorithms/tree/main/docs"
-Issues = "https://github.com/quantinuum-dev/guppy-algorithms/issues"
-Changelog = "https://github.com/quantinuum-dev/guppy-algorithms/blob/main/CHANGELOG.md"
+Repository = "https://github.com/Quantinuum/guppy-algorithms"
+Documentation = "https://github.com/Quantinuum/guppy-algorithms/tree/main/docs"
+Issues = "https://github.com/Quantinuum/guppy-algorithms/issues"
+Changelog = "https://github.com/Quantinuum/guppy-algorithms/blob/main/CHANGELOG.md"
 
 
 [tool.pytest.ini_options]
