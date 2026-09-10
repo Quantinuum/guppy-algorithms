@@ -16,5 +16,6 @@ highlights to explore register types, composition, and larger workflows.
 library-structure.md
 core-concepts.md
 feature-highlights.md
+testing.md
 upcoming-features.md
 ```
