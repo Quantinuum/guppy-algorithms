@@ -711,7 +711,7 @@ wheels = [
 
 [[package]]
 name = "guppyalgos"
-version = "0.3.0"
+version = "0.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "guppylang" },
@@ -752,7 +752,7 @@ numba = [
 [package.metadata]
 requires-dist = [
     { name = "furo", marker = "extra == 'dev-dependencies'", specifier = ">=2024.8.6" },
-    { name = "guppylang", specifier = ">=1.0,<1.1", index = "https://pypi.org/simple" },
+    { name = "guppylang", specifier = ">=1.0,<1.1" },
     { name = "ipykernel", marker = "extra == 'dev-dependencies'", specifier = ">=7.3.0" },
     { name = "jupyter", marker = "extra == 'dev-dependencies'", specifier = ">=1.1.0" },
     { name = "matplotlib", marker = "extra == 'dev-dependencies'", specifier = ">=3.11.1" },
@@ -769,7 +769,7 @@ requires-dist = [
     { name = "quantinuum-sphinx", marker = "extra == 'dev-dependencies'", specifier = ">=1.11.2" },
     { name = "ruff", marker = "extra == 'dev-dependencies'", specifier = ">=0.16.2" },
     { name = "scipy" },
-    { name = "selene-sim", marker = "extra == 'dev-dependencies'", specifier = ">=0.2.17", index = "https://pypi.org/simple" },
+    { name = "selene-sim", marker = "extra == 'dev-dependencies'", specifier = ">=0.2.17" },
     { name = "sphinx", marker = "extra == 'dev-dependencies'", specifier = "==9.1.0" },
     { name = "sphinx-autodoc-typehints", marker = "extra == 'dev-dependencies'", specifier = ">=3.13.2" },
     { name = "sphinx-copybutton", marker = "extra == 'dev-dependencies'" },

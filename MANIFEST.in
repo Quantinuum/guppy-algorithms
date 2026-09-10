@@ -1,2 +1,4 @@
 include README.md
 include CONTRIBUTING.md
+graft tests
+global-exclude __pycache__ *.py[cod]

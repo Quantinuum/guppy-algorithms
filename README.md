@@ -25,3 +25,8 @@ Explore the [example notebooks](examples/) and the
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, checks, and our
 `gh stack` workflow for stacked pull requests.
+
+## License
+
+The `guppyalgos` package is licensed under the [Apache License 2.0](LICENSE).
+Bundled material with a separate license retains its own license terms.

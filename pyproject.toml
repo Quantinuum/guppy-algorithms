@@ -1,13 +1,15 @@
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools>=77.0.3", "wheel"]
 build-backend = "setuptools.build_meta"
 
 
 [project]
 name = "guppyalgos"
-version = "0.3.0"
-description = "A python library"
+version = "0.0.0"
+description = "Reusable primitives for composing abstract quantum algorithms in Guppy"
 readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 requires-python = ">=3.12"
 authors = [
     { name = "Nathan Fitzpatrick", email = "nathan.fitzpatrick@quantinuum.com" },
@@ -51,29 +53,19 @@ dev-dependencies = [
 numba = ["numba>=0.6.7"]
 
 [[tool.uv.index]]
-# prevents selene from pinning to artifactory if the user has it set up
 name = "pypi"
 url = "https://pypi.org/simple"
 default = true
 
-[[tool.uv.index]]
-# prevents selene from pinning to artifactory if the user has it set up
-name = "artifactory"
-url = "https://quantinuumsw.jfrog.io/artifactory/api/pypi/pypi_local/simple"
-explicit = true
-
-[tool.uv.sources]
-selene-sim = { index = "pypi" }
-guppylang = { index = "pypi" }
-# guppylang = { git = "https://github.com/Quantinuum/guppylang.git", subdirectory="guppylang", rev="5b0f2c8" }
-qtmlib = { index = "artifactory" }
-selene-retrace = { path = "selene_retrace-0.1.0-cp312-abi3-manylinux_2_28_x86_64.whl" }
-
-[tool.setuptools]
-package-dir = { "guppyalgos" = "guppyalgos", "guppyalgos.tests" = "tests" }
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["guppyalgos", "guppyalgos.*"]
 
 [project.urls]
-Repository = "https://github.com/quantinuum-dev/guppy-algorithms.git"
+Repository = "https://github.com/quantinuum-dev/guppy-algorithms"
+Documentation = "https://github.com/quantinuum-dev/guppy-algorithms/tree/main/docs"
+Issues = "https://github.com/quantinuum-dev/guppy-algorithms/issues"
+Changelog = "https://github.com/quantinuum-dev/guppy-algorithms/blob/main/CHANGELOG.md"
 
 
 [tool.pytest.ini_options]
@@ -82,7 +74,7 @@ pythonpath = ["."]
 [tool.ruff]
 lint.select = ["E", "F", "B", "RUF", "PT", "UP", "C4", "D", "T10"]
 lint.ignore = ["RUF002"]
-extend-exclude = ["**/*.ipynb", "tests/conftest.py", ".venv/**", "docs/**", "qtmlib/_types/_type_stubs/**"]
+extend-exclude = ["**/*.ipynb", "tests/conftest.py", ".venv/**", "docs/**"]
 target-version = "py312"
 [tool.lint.ruff.per-file-ignores]
 "__init__.py" = ["F401"]
@@ -101,6 +93,3 @@ invalid-type-arguments = "ignore"
 invalid-argument-type = "ignore"
 invalid-parameter-default = "ignore"
 invalid-return-type = "ignore"
-# qtmlib is an optional private extra, so its imports are not available in
-# default development environments.
-unresolved-import = "ignore"
