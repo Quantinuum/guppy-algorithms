@@ -1,0 +1,63 @@
+name: Test Folder (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      test-folder:
+        description: 'Test paths relative to tests/, separated by spaces'
+        required: true
+        type: string
+      python-version:
+        description: 'Python version'
+        required: false
+        type: string
+        default: '3.13'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      UV_EXTRA_INDEX_URL: "https://${{ secrets.QTNM_ARTIF_SW_READ_USER }}:${{ secrets.QTNM_ARTIF_SW_READ_TOKEN }}@quantinuumsw.jfrog.io/artifactory/api/pypi/pypi_local/simple"
+      UV_FROZEN: 1
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: ${{ inputs.python-version }}
+          enable-cache: true
+
+      - name: Cache Python environment
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ inputs.python-version }}-${{ hashFiles('**/uv.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-${{ inputs.python-version }}-
+            ${{ runner.os }}-uv-
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ inputs.python-version }}-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{ inputs.python-version }}-
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          uv sync --all-extras
+
+      - name: Run tests for ${{ inputs.test-folder }}
+        shell: bash
+        run: |
+          read -r -a FOLDERS <<< "${{ inputs.test-folder }}"
+
+          TEST_PATHS=()
+          for folder in "${FOLDERS[@]}"; do
+            TEST_PATHS+=("tests/${folder}")
+          done
+
+          uv run pytest -v --tb=short -- "${TEST_PATHS[@]}"

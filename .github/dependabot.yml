@@ -1,0 +1,41 @@
+# Please see the documentation for all configuration options:
+# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+
+version: 2
+registries:
+  artifactory-python:
+    type: python-index
+    url: https://quantinuumsw.jfrog.io/artifactory/api/pypi/pypi_local/simple
+    username: ${{secrets.QTNM_ARTIF_SW_READ_USER}}
+    password: ${{secrets.QTNM_ARTIF_SW_READ_TOKEN}}
+  cloudsmith-rupauli:
+    type: python-index
+    url: https://dl.cloudsmith.io/basic/quantinuum/rupauli/python/simple
+    username: ${{secrets.CLOUDSMITH_USER}}
+    password: ${{secrets.CLOUDSMITH_TOKEN}}
+updates:
+  - package-ecosystem: "uv"
+    directories: # Location of package manifests
+      - "/"
+    registries:
+      - artifactory-python
+      - cloudsmith-rupauli
+    schedule:
+      interval: "weekly"
+    commit-message:
+      # Use a conventional commit tag
+      prefix: "chore(deps)"
+    groups:
+      patch:
+        update-types: ["patch"]
+      minor:
+        update-types: ["minor"]
+      # Major updates still generate individual PRs
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      # Use a conventional commit tag
+      prefix: "ci(deps)"

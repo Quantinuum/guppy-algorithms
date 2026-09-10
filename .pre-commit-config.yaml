@@ -1,0 +1,35 @@
+exclude: ^docs/_build/
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-toml
+      - id: check-yaml
+      # - id: check-added-large-files
+      # Python-specific
+      - id: check-docstring-first
+
+  - repo: https://github.com/crate-ci/typos
+    rev: v1.31.1
+    hooks:
+      - id: typos
+        args: [--write-changes]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.9
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: local
+    hooks:
+      - id: ty-check
+        name: ty-check
+        language: system
+        entry: uv run --extra dev-dependencies ty check
+        pass_filenames: false
+        args: []

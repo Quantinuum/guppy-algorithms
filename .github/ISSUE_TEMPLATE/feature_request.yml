@@ -1,0 +1,53 @@
+name: Feature Request
+description: Suggest a new feature or algorithm
+labels: ["enhancement", "status/needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        We welcome feature requests — especially new algorithms or circuit primitives.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or motivation
+      description: What problem does this feature solve? What use case does it support?
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: Describe the feature or behavior you'd like. Include references to papers if applicable.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any alternative approaches you've thought about.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - New algorithm
+        - Circuit primitive
+        - API improvement
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Any other information, links to papers, or examples.
+    validations:
+      required: false

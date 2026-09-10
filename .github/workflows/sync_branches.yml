@@ -1,0 +1,33 @@
+on:
+  push:
+    branches: [main]
+
+name: "Update origin target branches"
+
+permissions:
+  contents: write
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target_branch: [exp]  # add your target branches here
+    env:
+      SOURCE_BRANCH: main
+    steps:
+      - uses: actions/checkout@v7
+        name: Check out repo
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.ACCESS_TOKEN }}
+      - name: Set up git name
+        run: |
+          git config user.name "qtmlib-bot"
+          git config user.email "qtmlib-dev@quantinuum.com"
+      - name: Merge source into target branch
+        run: |
+          git switch ${{ matrix.target_branch }}
+          LAST_MSG=$(git log -1 --pretty=%B origin/$SOURCE_BRANCH)
+          git merge -m "$LAST_MSG" origin/$SOURCE_BRANCH
+          git push origin ${{ matrix.target_branch }}

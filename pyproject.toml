@@ -1,0 +1,106 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "guppyalgos"
+version = "0.3.0"
+description = "A python library"
+readme = { text = "Reusable quantum algorithms implemented in Guppy.", content-type = "text/plain" }
+requires-python = ">=3.12"
+authors = [
+    { name = "Nathan Fitzpatrick", email = "nathan.fitzpatrick@quantinuum.com" },
+]
+
+dependencies = [
+    "guppylang>=1.0,<1.1",
+    "pandas",
+    "numpy",
+    "scipy",
+    "zixy>=0.3.1",
+]
+
+
+[tool.uv]
+prerelease = "allow"
+
+[project.optional-dependencies]
+dev-dependencies = [
+    "selene-sim>=0.2.17",
+    "jupyter>=1.1.0",
+    "matplotlib>=3.11.1",
+    "pandas-stubs",
+    "ipykernel>=7.3.0",
+    "pytest-notebook>=0.11.0",
+    "pytest>=8.3.3,<9",
+    "pytest-lazy-fixtures",
+    "sphinx==9.1.0",
+    "pytest-xdist",
+    "sphinx-math-dollar>=1.2.1",
+    "sphinx-autodoc-typehints>=3.13.2",
+    "furo>=2024.8.6",
+    "myst-nb>=1.3.0",
+    "ruff>=0.16.2",
+    "ty==0.0.72",
+    "prek",
+    "quantinuum-sphinx>=1.11.2",
+    "sphinx-copybutton",
+    "sphinxcontrib-tikz>=0.4.20",
+]
+numba = ["numba>=0.6.7"]
+
+[[tool.uv.index]]
+# prevents selene from pinning to artifactory if the user has it set up
+name = "pypi"
+url = "https://pypi.org/simple"
+default = true
+
+[[tool.uv.index]]
+# prevents selene from pinning to artifactory if the user has it set up
+name = "artifactory"
+url = "https://quantinuumsw.jfrog.io/artifactory/api/pypi/pypi_local/simple"
+explicit = true
+
+[tool.uv.sources]
+selene-sim = { index = "pypi" }
+guppylang = { index = "pypi" }
+# guppylang = { git = "https://github.com/Quantinuum/guppylang.git", subdirectory="guppylang", rev="5b0f2c8" }
+qtmlib = { index = "artifactory" }
+selene-retrace = { path = "selene_retrace-0.1.0-cp312-abi3-manylinux_2_28_x86_64.whl" }
+
+[tool.setuptools]
+package-dir = { "guppyalgos" = "guppyalgos", "guppyalgos.tests" = "tests" }
+
+[project.urls]
+Repository = "https://github.com/quantinuum-dev/guppy-algorithms.git"
+
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+
+[tool.ruff]
+lint.select = ["E", "F", "B", "RUF", "PT", "UP", "C4", "D", "T10"]
+lint.ignore = ["RUF002"]
+extend-exclude = ["**/*.ipynb", "tests/conftest.py", ".venv/**", "docs/**", "qtmlib/_types/_type_stubs/**"]
+target-version = "py312"
+[tool.lint.ruff.per-file-ignores]
+"__init__.py" = ["F401"]
+"tests/conftest.py" = ["D103"]
+
+[tool.ty.src]
+exclude = ["agents/**", "**/*.ipynb"]
+
+[tool.ty.rules]
+#For GuppyFunctionDefinition[[x],y] to be an allowed python type, as it uses guppy's internal type system which is not fully compatible with ty's
+invalid-type-form = "ignore"
+invalid-type-arguments = "ignore"
+# GuppyFunctionDefinition call signatures are explicit Guppy-level types rather
+# than Python-native callable signatures, so ty 0.0.41 reports broad false
+# positives for higher-order argument, default, and return compatibility.
+invalid-argument-type = "ignore"
+invalid-parameter-default = "ignore"
+invalid-return-type = "ignore"
+# qtmlib is an optional private extra, so its imports are not available in
+# default development environments.
+unresolved-import = "ignore"

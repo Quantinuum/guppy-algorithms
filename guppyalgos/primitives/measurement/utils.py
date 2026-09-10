@@ -1,0 +1,109 @@
+"""Utility functions for measurement and discarding of qubits."""
+
+from typing import no_type_check
+
+from guppylang import guppy
+from guppylang.std.builtins import array, nat, nothing, owned, panic, some
+from guppylang.std.collections import Stack
+from guppylang.std.option import Option
+from guppylang.std.quantum import (
+    Measurement,
+    collect_measurements,
+    discard,
+    discard_array,
+    measure,
+    measure_array,
+    qubit,
+)
+
+
+@guppy
+@no_type_check
+def measure_stack[n_work: nat](
+    qs: Stack[qubit, n_work] @ owned,
+) -> array[Option[Measurement], n_work]:  # ty: ignore[not-subscriptable]
+    """Measure all qubits in a stack.
+
+    Qubits are returned in the order they are popped off the stack.
+
+    Args:
+        qs (Stack[qubit, n_work] @ owned): The stack of qubits to measure.
+
+    """
+    meas_opts = array(nothing[Measurement]() for _ in range(n_work))
+    for i in range(len(qs)):
+        q = qs.pop()
+        meas_opts[i].swap(some(measure(q))).unwrap_nothing()
+
+    qs.discard_empty()
+    return meas_opts
+
+
+@guppy
+@no_type_check
+def discard_stack[n_work: nat](qs: Stack[qubit, n_work] @ owned) -> None:
+    """Discard all qubits in a stack.
+
+    Args:
+        qs (Stack[qubit, n_work] @ owned): The stack of qubits to discard.
+
+    """
+    while len(qs) > 0:
+        q = qs.pop()
+        discard(q)
+
+    qs.discard_empty()
+
+
+@guppy
+@no_type_check
+def discard_stack_zero[n_work: nat](qs: Stack[qubit, n_work] @ owned) -> None:
+    """Discard all qubits in a stack with panic if not in 0.
+
+    Args:
+        qs (Stack[qubit, n_work] @ owned): The stack of qubits to discard.
+
+    """
+    while len(qs) > 0:
+        q = qs.pop()
+        discard_zero(q)
+
+    qs.discard_empty()
+
+
+@guppy
+@no_type_check
+def discard_zero(q: qubit @ owned) -> None:
+    """Discard qubit with panic if not in 0."""
+    if measure(q).read():
+        panic("Qubit promised to be in 0 is non-zero")
+
+
+@guppy
+@no_type_check
+def discard_array_zero[n: nat](qs: array[qubit, n] @ owned) -> None:  # ty: ignore[not-subscriptable]
+    """Discard qubit array with panic if not in 0."""
+    measurements = measure_array(qs)
+    for meas in collect_measurements(measurements):
+        if meas:
+            panic("Qubit promised to be in 0 is non-zero")
+
+
+@guppy
+@no_type_check
+def discard_nested_array[n_qubits_per_register: nat, n_registers: nat](
+    nested_qregs: array[array[qubit, n_qubits_per_register], n_registers] @ owned,  # ty: ignore[not-subscriptable]
+) -> None:
+    """Discard all qubits in a nested array of registers.
+
+    Args:
+        nested_qregs: Nested array of qubit registers to discard.
+        n_qubits_per_register (nat): Number of qubits in each register.
+        n_registers (nat): Number of registers in the nested array.
+
+    """
+    for reg_idx in range(len(nested_qregs)):
+        inner_qreg = nested_qregs.take(reg_idx)
+        discard_array(inner_qreg)
+
+    nested_qregs.discard_all_taken()
