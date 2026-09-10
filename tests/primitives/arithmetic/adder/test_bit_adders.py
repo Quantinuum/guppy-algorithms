@@ -3,7 +3,6 @@
 from typing import no_type_check
 
 import numpy as np
-import pytest
 from guppylang.decorator import guppy
 from guppylang.std.debug import state_output
 from guppylang.std.quantum import discard, qubit, x
@@ -17,23 +16,12 @@ from guppyalgos.primitives.arithmetic.adder.bit_adders import (
 from tests.helpers import assert_allclose_ignorephase
 
 
-@pytest.mark.parametrize(
-    ("a_bit", "b_bit", "expected_sum", "expected_carry"),
-    [
-        (False, False, False, False),
-        (False, True, True, False),
-        (True, False, True, False),
-        (True, True, False, True),
-    ],
-)
-def test_half_adder_truth_table(
-    a_bit: bool, b_bit: bool, expected_sum: bool, expected_carry: bool
-) -> None:
+def test_half_adder_truth_table() -> None:
     """Verify half_adder implements sum = a xor b and carry = a and b."""
 
     @guppy
     @no_type_check
-    def main() -> None:
+    def main(a_bit: bool, b_bit: bool) -> None:
         a = qubit()
         b = qubit()
         c_out = qubit()
@@ -51,41 +39,34 @@ def test_half_adder_truth_table(
         discard(b)
         discard(c_out)
 
-    res = main.emulator(3).run()
-    states = Quest.extract_states_dict(res.results[0].entries)
-    zero_state = np.array([1, 0], dtype=np.complex128)
-    one_state = np.array([0, 1], dtype=np.complex128)
-    if expected_sum:
-        assert_allclose_ignorephase(states["sum"].get_single_state(), one_state)
-    else:
-        assert_allclose_ignorephase(states["sum"].get_single_state(), zero_state)
-    if expected_carry:
-        assert_allclose_ignorephase(states["carry"].get_single_state(), one_state)
-    else:
-        assert_allclose_ignorephase(states["carry"].get_single_state(), zero_state)
+    # Compile once; reuse the program for every classical input below.
+    emulator = main.emulator(3)
+    for a_bit, b_bit, expected_sum, expected_carry in [
+        (False, False, False, False),
+        (False, True, True, False),
+        (True, False, True, False),
+        (True, True, False, True),
+    ]:
+        res = emulator.run(a_bit=a_bit, b_bit=b_bit)
+        states = Quest.extract_states_dict(res.results[0].entries)
+        zero_state = np.array([1, 0], dtype=np.complex128)
+        one_state = np.array([0, 1], dtype=np.complex128)
+        if expected_sum:
+            assert_allclose_ignorephase(states["sum"].get_single_state(), one_state)
+        else:
+            assert_allclose_ignorephase(states["sum"].get_single_state(), zero_state)
+        if expected_carry:
+            assert_allclose_ignorephase(states["carry"].get_single_state(), one_state)
+        else:
+            assert_allclose_ignorephase(states["carry"].get_single_state(), zero_state)
 
 
-@pytest.mark.parametrize(
-    ("cin_bit", "a_bit", "b_bit", "expected_sum", "expected_carry"),
-    [
-        (False, False, False, False, False),
-        (False, False, True, True, False),
-        (False, True, False, True, False),
-        (False, True, True, False, True),
-        (True, False, False, True, False),
-        (True, False, True, False, True),
-        (True, True, False, False, True),
-        (True, True, True, True, True),
-    ],
-)
-def test_full_adder_truth_table(
-    a_bit: bool, b_bit: bool, cin_bit: bool, expected_sum: bool, expected_carry: bool
-) -> None:
+def test_full_adder_truth_table() -> None:
     """Verify full_adder computes a+b+cin with sum in b and carry in c_out."""
 
     @guppy
     @no_type_check
-    def main() -> None:
+    def main(a_bit: bool, b_bit: bool, cin_bit: bool) -> None:
         cin = qubit()
         a = qubit()
         b = qubit()
@@ -107,35 +88,38 @@ def test_full_adder_truth_table(
         discard(cin)
         discard(c_out)
 
-    res = main.emulator(4).run()
-    states = Quest.extract_states_dict(res.results[0].entries)
-    zero_state = np.array([1, 0], dtype=np.complex128)
-    one_state = np.array([0, 1], dtype=np.complex128)
-    if expected_sum:
-        assert_allclose_ignorephase(states["sum"].get_single_state(), one_state)
-    else:
-        assert_allclose_ignorephase(states["sum"].get_single_state(), zero_state)
-    if expected_carry:
-        assert_allclose_ignorephase(states["carry"].get_single_state(), one_state)
-    else:
-        assert_allclose_ignorephase(states["carry"].get_single_state(), zero_state)
+    # Compile once; reuse the program for every classical input below.
+    emulator = main.emulator(4)
+    for cin_bit, a_bit, b_bit, expected_sum, expected_carry in [
+        (False, False, False, False, False),
+        (False, False, True, True, False),
+        (False, True, False, True, False),
+        (False, True, True, False, True),
+        (True, False, False, True, False),
+        (True, False, True, False, True),
+        (True, True, False, False, True),
+        (True, True, True, True, True),
+    ]:
+        res = emulator.run(a_bit=a_bit, b_bit=b_bit, cin_bit=cin_bit)
+        states = Quest.extract_states_dict(res.results[0].entries)
+        zero_state = np.array([1, 0], dtype=np.complex128)
+        one_state = np.array([0, 1], dtype=np.complex128)
+        if expected_sum:
+            assert_allclose_ignorephase(states["sum"].get_single_state(), one_state)
+        else:
+            assert_allclose_ignorephase(states["sum"].get_single_state(), zero_state)
+        if expected_carry:
+            assert_allclose_ignorephase(states["carry"].get_single_state(), one_state)
+        else:
+            assert_allclose_ignorephase(states["carry"].get_single_state(), zero_state)
 
 
-@pytest.mark.parametrize(
-    ("a_bit", "b_bit"),
-    [
-        (False, False),
-        (False, True),
-        (True, False),
-        (True, True),
-    ],
-)
-def test_half_adder_inverse(a_bit: bool, b_bit: bool) -> None:
+def test_half_adder_inverse() -> None:
     """Verify half_adder_inverse acts as the inverse."""
 
     @guppy
     @no_type_check
-    def main() -> None:
+    def main(a_bit: bool, b_bit: bool) -> None:
         a = qubit()
         b = qubit()
         c_out = qubit()
@@ -159,32 +143,22 @@ def test_half_adder_inverse(a_bit: bool, b_bit: bool) -> None:
         discard(b)
         discard(c_out)
 
-    res = main.emulator(3).run()
-    states = Quest.extract_states_dict(res.results[0].entries)
-    zero_state = np.array([1, 0], dtype=np.complex128)
-    for state in states.values():
-        assert_allclose_ignorephase(state.get_single_state(), zero_state)
+    # Compile once; reuse the program for every classical input below.
+    emulator = main.emulator(3)
+    for a_bit, b_bit in [(False, False), (False, True), (True, False), (True, True)]:
+        res = emulator.run(a_bit=a_bit, b_bit=b_bit)
+        states = Quest.extract_states_dict(res.results[0].entries)
+        zero_state = np.array([1, 0], dtype=np.complex128)
+        for state in states.values():
+            assert_allclose_ignorephase(state.get_single_state(), zero_state)
 
 
-@pytest.mark.parametrize(
-    ("cin_bit", "a_bit", "b_bit"),
-    [
-        (False, False, False),
-        (False, False, True),
-        (False, True, False),
-        (False, True, True),
-        (True, False, False),
-        (True, False, True),
-        (True, True, False),
-        (True, True, True),
-    ],
-)
-def test_full_adder_inverse(cin_bit: bool, a_bit: bool, b_bit: bool) -> None:
+def test_full_adder_inverse() -> None:
     """Verify full_adder_inverse does act as the inverse."""
 
     @guppy
     @no_type_check
-    def main() -> None:
+    def main(cin_bit: bool, a_bit: bool, b_bit: bool) -> None:
         cin = qubit()
         a = qubit()
         b = qubit()
@@ -214,8 +188,20 @@ def test_full_adder_inverse(cin_bit: bool, a_bit: bool, b_bit: bool) -> None:
         discard(cin)
         discard(c_out)
 
-    res = main.emulator(4).run()
-    states = Quest.extract_states_dict(res.results[0].entries)
-    zero_state = np.array([1, 0], dtype=np.complex128)
-    for state in states.values():
-        assert_allclose_ignorephase(state.get_single_state(), zero_state)
+    # Compile once; reuse the program for every classical input below.
+    emulator = main.emulator(4)
+    for cin_bit, a_bit, b_bit in [
+        (False, False, False),
+        (False, False, True),
+        (False, True, False),
+        (False, True, True),
+        (True, False, False),
+        (True, False, True),
+        (True, True, False),
+        (True, True, True),
+    ]:
+        res = emulator.run(cin_bit=cin_bit, a_bit=a_bit, b_bit=b_bit)
+        states = Quest.extract_states_dict(res.results[0].entries)
+        zero_state = np.array([1, 0], dtype=np.complex128)
+        for state in states.values():
+            assert_allclose_ignorephase(state.get_single_state(), zero_state)

@@ -29,10 +29,7 @@ from guppyalgos.primitives.arithmetic import (
     adder_ripple_gidney_mod,
     adder_ripple_gidney_mod_dagger,
 )
-from guppyalgos.primitives.arithmetic.adder.adder_ripple_cuccaro import (
-    _crc_prep_regs,
-)
-from guppyalgos.utils import apply_bitstring, int_to_bits
+from guppyalgos.utils import apply_bitstring, int_to_bits, qarray
 from tests.helpers import (
     get_total_state_on_only_specified_registers,
     project_state_onto_bitstring,
@@ -40,24 +37,13 @@ from tests.helpers import (
 
 
 @pytest.mark.parametrize(
-    ("n", "a", "b"),
+    ("n", "cases"),
     [
-        (2, 3, 1),
-        (2, 1, 2),
-        (3, 3, 4),
-        (3, 5, 2),
-        (4, 3, 7),
-        (4, 9, 4),
-        (5, 5, 12),
-        (5, 18, 6),
-        (6, 5, 32),
-        (6, 48, 6),
-        # (7, 5, 96),
-        # (7, 96, 6),
-        (2, 3, 3),  # overflow
-        (3, 7, 7),  # overflow
-        (4, 15, 15),  # overflow
-        (5, 31, 31),  # overflow
+        (2, [(3, 1), (1, 2), (3, 3)]),
+        (3, [(3, 4), (5, 2), (7, 7)]),
+        (4, [(3, 7), (9, 4), (15, 15)]),
+        (5, [(5, 12), (18, 6), (31, 31)]),
+        (6, [(5, 32), (48, 6)]),
     ],
 )
 @pytest.mark.parametrize(
@@ -69,27 +55,22 @@ from tests.helpers import (
 )
 def test_addition_carry_out[n: nat](
     n: int,
-    a: int,
-    b: int,
+    cases: list[tuple[int, int]],
     adder: GuppyFunctionDefinition[[array[qubit, n], array[qubit, n], qubit], None],
     num_ancilla_fn: Callable[[int], int],
 ) -> None:
     """Test ripple carry addition circuit."""
     n_qubits = 2 * n + 1 + num_ancilla_fn(n)
 
-    a_bits = int_to_bits(a, n)
-    _a_bit_array = array(*a_bits)
-
-    b_bits = int_to_bits(b, n)
-    _b_bit_array = array(*b_bits)
-
-    a_plus_b = a + b
-
     @guppy
     @no_type_check
-    def main() -> None:
+    def main(_a_bit_array: array[bool, n], _b_bit_array: array[bool, n]) -> None:
         """Run the main test function."""
-        a_reg, b_reg, carry_out = _crc_prep_regs(_a_bit_array, _b_bit_array)
+        a_reg = qarray(n)
+        b_reg = qarray(n)
+        apply_bitstring(a_reg, _a_bit_array)
+        apply_bitstring(b_reg, _b_bit_array)
+        carry_out = qubit()
 
         adder(a_reg, b_reg, carry_out)
 
@@ -102,40 +83,38 @@ def test_addition_carry_out[n: nat](
 
         output("b_meas", collect_measurements(measure_array(b_reg)))
 
-    res = main.emulator(n_qubits=n_qubits).run()
-    assert res.results[0].as_dict()["b_meas"] == int_to_bits((a + b) % 2**n, n)
+    # Compile once; reuse the program for every classical input below.
+    emulator = main.emulator(n_qubits=n_qubits)
+    for a, b in cases:
+        a_bits = int_to_bits(a, n)
 
-    states = Quest.extract_states_dict(res.results[0].entries)
+        b_bits = int_to_bits(b, n)
 
-    total_state, _ = get_total_state_on_only_specified_registers(
-        states, ["b_reg", "carry_out"]
-    )
-    total_state = total_state.state
-    assert total_state[a_plus_b] == 1
+        a_plus_b = a + b
 
-    a_proj = project_state_onto_bitstring(states["a_reg"], int_to_bits(a, n))
-    assert np.allclose(a_proj.probability, 1.0)
+        res = emulator.run(_a_bit_array=a_bits, _b_bit_array=b_bits)
+        assert res.results[0].as_dict()["b_meas"] == int_to_bits((a + b) % 2**n, n)
+
+        states = Quest.extract_states_dict(res.results[0].entries)
+
+        total_state, _ = get_total_state_on_only_specified_registers(
+            states, ["b_reg", "carry_out"]
+        )
+        total_state = total_state.state
+        assert total_state[a_plus_b] == 1
+
+        a_proj = project_state_onto_bitstring(states["a_reg"], int_to_bits(a, n))
+        assert np.allclose(a_proj.probability, 1.0)
 
 
 @pytest.mark.parametrize(
-    ("n", "a", "b"),
+    ("n", "cases"),
     [
-        (2, 3, 1),
-        (2, 1, 2),
-        (3, 3, 4),
-        (3, 5, 2),
-        (4, 3, 7),
-        (4, 9, 4),
-        (5, 5, 12),
-        (5, 18, 6),
-        (6, 5, 32),
-        (6, 48, 6),
-        # (7, 5, 96),
-        # (7, 96, 6),
-        (2, 3, 3),  # overflow
-        (3, 7, 7),  # overflow
-        (4, 15, 15),  # overflow
-        (5, 31, 31),  # overflow
+        (2, [(3, 1), (1, 2), (3, 3)]),
+        (3, [(3, 4), (5, 2), (7, 7)]),
+        (4, [(3, 7), (9, 4), (15, 15)]),
+        (5, [(5, 12), (18, 6), (31, 31)]),
+        (6, [(5, 32), (48, 6)]),
     ],
 )
 @pytest.mark.parametrize(
@@ -147,25 +126,22 @@ def test_addition_carry_out[n: nat](
 )
 def test_addition_mod[n: nat](
     n: int,
-    a: int,
-    b: int,
+    cases: list[tuple[int, int]],
     adder: GuppyFunctionDefinition[[array[qubit, n], array[qubit, n]], None],
     num_ancilla_fn: Callable[[int], int],
 ) -> None:
     """Test ripple carry modular addition circuit."""
     n_qubits = 2 * n + num_ancilla_fn(n)
 
-    a_bits = int_to_bits(a, n)
-    _a_bit_array = array(*a_bits)
-
-    b_bits = int_to_bits(b, n)
-    _b_bit_array = array(*b_bits)
-
     @guppy
     @no_type_check
-    def main() -> None:
+    def main(_a_bit_array: array[bool, n], _b_bit_array: array[bool, n]) -> None:
         """Run the main test function."""
-        a_reg, b_reg, carry_out = _crc_prep_regs(_a_bit_array, _b_bit_array)
+        a_reg = qarray(n)
+        b_reg = qarray(n)
+        apply_bitstring(a_reg, _a_bit_array)
+        apply_bitstring(b_reg, _b_bit_array)
+        carry_out = qubit()
         discard(carry_out)
 
         adder(a_reg, b_reg)
@@ -177,40 +153,36 @@ def test_addition_mod[n: nat](
 
         discard_array(a_reg)
 
-    res = main.emulator(n_qubits=n_qubits).run()
-    assert res.results[0].as_dict()["b_meas"] == int_to_bits((a + b) % 2**n, n)
+    # Compile once; reuse the program for every classical input below.
+    emulator = main.emulator(n_qubits=n_qubits)
+    for a, b in cases:
+        a_bits = int_to_bits(a, n)
 
-    states = Quest.extract_states_dict(res.results[0].entries)
+        b_bits = int_to_bits(b, n)
 
-    total_state, _ = get_total_state_on_only_specified_registers(states, ["b_reg"])
-    total_state = total_state.state
+        res = emulator.run(_a_bit_array=a_bits, _b_bit_array=b_bits)
+        assert res.results[0].as_dict()["b_meas"] == int_to_bits((a + b) % 2**n, n)
 
-    a_plus_b_mod = (a + b) % 2**n
-    assert total_state[a_plus_b_mod] == 1
+        states = Quest.extract_states_dict(res.results[0].entries)
 
-    a_proj = project_state_onto_bitstring(states["a_reg"], int_to_bits(a, n))
-    assert np.allclose(a_proj.probability, 1.0)
+        total_state, _ = get_total_state_on_only_specified_registers(states, ["b_reg"])
+        total_state = total_state.state
+
+        a_plus_b_mod = (a + b) % 2**n
+        assert total_state[a_plus_b_mod] == 1
+
+        a_proj = project_state_onto_bitstring(states["a_reg"], int_to_bits(a, n))
+        assert np.allclose(a_proj.probability, 1.0)
 
 
 @pytest.mark.parametrize(
-    ("n", "a", "b"),
+    ("n", "cases"),
     [
-        (2, 3, 1),
-        (2, 1, 2),
-        (3, 3, 4),
-        (3, 5, 2),
-        (4, 3, 7),
-        (4, 9, 4),
-        (5, 5, 12),
-        (5, 18, 6),
-        (6, 5, 32),
-        (6, 48, 6),
-        # (7, 5, 96),
-        # (7, 96, 6),
-        (2, 3, 3),  # overflow
-        (3, 7, 7),  # overflow
-        (4, 15, 15),  # overflow
-        (5, 31, 31),  # overflow
+        (2, [(3, 1), (1, 2), (3, 3)]),
+        (3, [(3, 4), (5, 2), (7, 7)]),
+        (4, [(3, 7), (9, 4), (15, 15)]),
+        (5, [(5, 12), (18, 6), (31, 31)]),
+        (6, [(5, 32), (48, 6)]),
     ],
 )
 @pytest.mark.parametrize(
@@ -230,8 +202,7 @@ def test_addition_mod[n: nat](
 )
 def test_addition_carry_out_dagger[n: nat](
     n: int,
-    a: int,
-    b: int,
+    cases: list[tuple[int, int]],
     adder: GuppyFunctionDefinition[[array[qubit, n], array[qubit, n], qubit], None],
     adder_dagger: GuppyFunctionDefinition[
         [array[qubit, n], array[qubit, n], qubit], None
@@ -241,17 +212,15 @@ def test_addition_carry_out_dagger[n: nat](
     """Test ripple carry dagger inverts correctly."""
     n_qubits = 2 * n + 1 + num_ancilla_fn(n)
 
-    a_bits = int_to_bits(a, n)
-    _a_bit_array = array(*a_bits)
-
-    b_bits = int_to_bits(b, n)
-    _b_bit_array = array(*b_bits)
-
     @guppy
     @no_type_check
-    def main() -> None:
+    def main(_a_bit_array: array[bool, n], _b_bit_array: array[bool, n]) -> None:
         """Run the main test function."""
-        a_reg, b_reg, carry_out = _crc_prep_regs(_a_bit_array, _b_bit_array)
+        a_reg = qarray(n)
+        b_reg = qarray(n)
+        apply_bitstring(a_reg, _a_bit_array)
+        apply_bitstring(b_reg, _b_bit_array)
+        carry_out = qubit()
 
         adder(a_reg, b_reg, carry_out)
         adder_dagger(a_reg, b_reg, carry_out)
@@ -269,31 +238,27 @@ def test_addition_carry_out_dagger[n: nat](
         discard_array(a_reg)
         discard_array(b_reg)
 
-    statevector = main.emulator(n_qubits=n_qubits).with_seed(42).run()
-    states = Quest.extract_states_dict(statevector.results[0].entries)
-    for state in states.values():
-        assert state.get_single_state()[0] == 1
+    # Compile once; reuse the program for every classical input below.
+    emulator = main.emulator(n_qubits=n_qubits).with_seed(42)
+    for a, b in cases:
+        a_bits = int_to_bits(a, n)
+
+        b_bits = int_to_bits(b, n)
+
+        statevector = emulator.run(_a_bit_array=a_bits, _b_bit_array=b_bits)
+        states = Quest.extract_states_dict(statevector.results[0].entries)
+        for state in states.values():
+            assert state.get_single_state()[0] == 1
 
 
 @pytest.mark.parametrize(
-    ("n", "a", "b"),
+    ("n", "cases"),
     [
-        (2, 3, 1),
-        (2, 1, 2),
-        (3, 3, 4),
-        (3, 5, 2),
-        (4, 3, 7),
-        (4, 9, 4),
-        (5, 5, 12),
-        (5, 18, 6),
-        (6, 5, 32),
-        (6, 48, 6),
-        # (7, 5, 96),
-        # (7, 96, 6),
-        (2, 3, 3),  # overflow
-        (3, 7, 7),  # overflow
-        (4, 15, 15),  # overflow
-        (5, 31, 31),  # overflow
+        (2, [(3, 1), (1, 2), (3, 3)]),
+        (3, [(3, 4), (5, 2), (7, 7)]),
+        (4, [(3, 7), (9, 4), (15, 15)]),
+        (5, [(5, 12), (18, 6), (31, 31)]),
+        (6, [(5, 32), (48, 6)]),
     ],
 )
 @pytest.mark.parametrize(
@@ -305,8 +270,7 @@ def test_addition_carry_out_dagger[n: nat](
 )
 def test_addition_mod_dagger[n: nat](
     n: int,
-    a: int,
-    b: int,
+    cases: list[tuple[int, int]],
     adder: GuppyFunctionDefinition[[array[qubit, n], array[qubit, n], qubit], None],
     adder_dagger: GuppyFunctionDefinition[
         [array[qubit, n], array[qubit, n], qubit], None
@@ -316,17 +280,15 @@ def test_addition_mod_dagger[n: nat](
     """Test ripple carry dagger inverts correctly."""
     n_qubits = 2 * n + 2 * num_ancilla_fn(n)
 
-    a_bits = int_to_bits(a, n)
-    _a_bit_array = array(*a_bits)
-
-    b_bits = int_to_bits(b, n)
-    _b_bit_array = array(*b_bits)
-
     @guppy
     @no_type_check
-    def main() -> None:
+    def main(_a_bit_array: array[bool, n], _b_bit_array: array[bool, n]) -> None:
         """Run the main test function."""
-        a_reg, b_reg, carry_out = _crc_prep_regs(_a_bit_array, _b_bit_array)
+        a_reg = qarray(n)
+        b_reg = qarray(n)
+        apply_bitstring(a_reg, _a_bit_array)
+        apply_bitstring(b_reg, _b_bit_array)
+        carry_out = qubit()
 
         adder(a_reg, b_reg)
         adder_dagger(a_reg, b_reg)
@@ -342,7 +304,14 @@ def test_addition_mod_dagger[n: nat](
         discard_array(a_reg)
         discard_array(b_reg)
 
-    statevector = main.emulator(n_qubits=n_qubits).with_seed(42).run()
-    states = Quest.extract_states_dict(statevector.results[0].entries)
-    for state in states.values():
-        assert state.get_single_state()[0] == 1
+    # Compile once; reuse the program for every classical input below.
+    emulator = main.emulator(n_qubits=n_qubits).with_seed(42)
+    for a, b in cases:
+        a_bits = int_to_bits(a, n)
+
+        b_bits = int_to_bits(b, n)
+
+        statevector = emulator.run(_a_bit_array=a_bits, _b_bit_array=b_bits)
+        states = Quest.extract_states_dict(statevector.results[0].entries)
+        for state in states.values():
+            assert state.get_single_state()[0] == 1

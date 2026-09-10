@@ -5,13 +5,14 @@ from typing import no_type_check
 
 import pytest
 from guppylang import guppy
-from guppylang.std.builtins import output
+from guppylang.std.builtins import array, output
 from guppylang.std.quantum import (
     collect_measurements,
     measure,
     measure_array,
     x,
     discard_array,
+    qubit,
 )
 from guppyalgos.utils import qarray
 
@@ -67,34 +68,20 @@ def test_incrementer_does_not_panic(num_bits: int) -> None:
 
 
 @pytest.mark.parametrize(
-    ("num_bits", "value"),
+    ("num_bits", "values"),
     [
-        (5, 0),
-        (5, 1),
-        (5, 13),
-        (5, 30),
-        (5, 31),
-        (7, 0),
-        (7, 1),
-        (7, 63),
-        (7, 126),
-        (7, 127),
-        # (12, 23),
+        (5, [0, 1, 13, 30, 31]),
+        (7, [0, 1, 63, 126, 127]),
     ],
 )
-def test_cca_incrementer(num_bits: int, value: int) -> None:
+def test_cca_incrementer(num_bits: int, values: list[int]) -> None:
     """Increment an m-bit register using conditionally clean ancillas."""
     num_ancillas = required_clean_ancillas(num_bits)
 
-    input_bits = _little_endian_bits(value, num_bits)
-    expected_value = (value + 1) % (1 << num_bits)
-    expected = _output_string(expected_value, num_bits)
-
     @guppy
     @no_type_check
-    def main() -> None:
+    def main(bits: array[bool, num_bits]) -> None:
         q = qarray(num_bits)
-        bits = input_bits
 
         for i in range(num_bits):
             if bits[i]:
@@ -107,44 +94,31 @@ def test_cca_incrementer(num_bits: int, value: int) -> None:
             collect_measurements(measure_array(q)),
         )
 
-    emulator_result = (
-        main.emulator(n_qubits=num_bits + num_ancillas)
-        .with_seed(43)
-        .with_shots(10)
-        .run()
+    # Group values within a test so compilation is reused even with xdist.
+    emulator = (
+        main.emulator(n_qubits=num_bits + num_ancillas).with_seed(43).with_shots(10)
     )
-
-    assert emulator_result.collated_counts() == Counter({(("out", expected),): 10})
+    for value in values:
+        expected = _output_string((value + 1) % (1 << num_bits), num_bits)
+        result = emulator.run(bits=_little_endian_bits(value, num_bits))
+        assert result.collated_counts() == Counter({(("out", expected),): 10}), value
 
 
 @pytest.mark.parametrize(
-    ("num_bits", "value"),
+    ("num_bits", "values"),
     [
-        (5, 0),
-        (5, 1),
-        (5, 13),
-        (5, 30),
-        (5, 31),
-        (7, 0),
-        (7, 1),
-        (7, 63),
-        (7, 126),
-        (7, 127),
+        (5, [0, 1, 13, 30, 31]),
+        (7, [0, 1, 63, 126, 127]),
     ],
 )
-def test_cca_decrementer(num_bits: int, value: int) -> None:
+def test_cca_decrementer(num_bits: int, values: list[int]) -> None:
     """Decrement an m-bit register using conditionally clean ancillas."""
     num_ancillas = required_clean_ancillas(num_bits)
 
-    input_bits = _little_endian_bits(value, num_bits)
-    expected_value = (value - 1) % (1 << num_bits)
-    expected = _output_string(expected_value, num_bits)
-
     @guppy
     @no_type_check
-    def main() -> None:
+    def main(bits: array[bool, num_bits]) -> None:
         q = qarray(num_bits)
-        bits = input_bits
 
         for i in range(num_bits):
             if bits[i]:
@@ -157,66 +131,45 @@ def test_cca_decrementer(num_bits: int, value: int) -> None:
             collect_measurements(measure_array(q)),
         )
 
-    emulator_result = (
-        main.emulator(n_qubits=num_bits + num_ancillas)
-        .with_seed(43)
-        .with_shots(10)
-        .run()
+    emulator = (
+        main.emulator(n_qubits=num_bits + num_ancillas).with_seed(43).with_shots(10)
     )
-
-    assert emulator_result.collated_counts() == Counter({(("out", expected),): 10})
+    for value in values:
+        expected = _output_string((value - 1) % (1 << num_bits), num_bits)
+        result = emulator.run(bits=_little_endian_bits(value, num_bits))
+        assert result.collated_counts() == Counter({(("out", expected),): 10}), value
 
 
 @pytest.mark.parametrize(
-    ("num_bits", "value"),
+    ("num_bits", "values"),
     [
-        (5, 0),
-        (5, 1),
-        (5, 13),
-        (5, 30),
-        (5, 31),
-        (7, 0),
-        (6, 1),
-        (6, 63),
-        (6, 126),
-        (6, 127),
+        (5, [0, 1, 13, 30, 31]),
+        (7, [0]),
+        (6, [1, 63, 126, 127]),
     ],
 )
-@pytest.mark.parametrize("control_on", [False, True])
 @pytest.mark.parametrize("dagger", [False, True])
 def test_cntrl_cca_incrementer(
     num_bits: int,
-    value: int,
-    control_on: bool,
+    values: list[int],
     dagger: bool,
 ) -> None:
     """Increment/decrement iff all control qubits are set."""
-    value %= 1 << num_bits
-
     num_controls = 1
 
     num_ancillas_big = required_clean_ancillas(num_bits + num_controls)
     num_ancillas_small = required_clean_ancillas(num_controls)
     num_ancillas = num_ancillas_big + num_ancillas_small + 1
 
-    input_bits = _little_endian_bits(value, num_bits)
-
-    # Test every possible control configuration.
-    if not dagger:
-        expected_value = (value + 1) % (1 << num_bits) if control_on else value
-    else:
-        expected_value = (value - 1) % (1 << num_bits) if control_on else value
-
     @guppy
     @no_type_check
-    def main() -> None:
+    def main(bits: array[bool, num_bits], control_on: bool) -> None:
         control = qubit()
         q = qarray(num_bits)
 
         if control_on:
             x(control)
 
-        bits = input_bits
         for i in range(num_bits):
             if bits[i]:
                 x(q[i])
@@ -229,16 +182,21 @@ def test_cntrl_cca_incrementer(
         output("ctrl", measure(control).read())
         output("out", collect_measurements(measure_array(q)))
 
-    expected = _output_string(expected_value, num_bits)
-    expected_ctrl = _output_string(control_on, num_controls)
-
-    emulator_result = (
+    emulator = (
         main.emulator(n_qubits=(num_bits + num_controls + num_ancillas))
         .with_seed(41)
         .with_shots(10)
-        .run()
     )
-
-    assert emulator_result.collated_counts() == Counter(
-        {(("ctrl", expected_ctrl), ("out", expected)): 10}
-    )
+    for control_on in [False, True]:
+        for value in values:
+            value %= 1 << num_bits
+            delta = -1 if dagger else 1
+            expected_value = (value + delta) % (1 << num_bits) if control_on else value
+            expected = _output_string(expected_value, num_bits)
+            expected_ctrl = _output_string(control_on, num_controls)
+            result = emulator.run(
+                bits=_little_endian_bits(value, num_bits), control_on=control_on
+            )
+            assert result.collated_counts() == Counter(
+                {(("ctrl", expected_ctrl), ("out", expected)): 10}
+            ), (value, control_on, dagger)
