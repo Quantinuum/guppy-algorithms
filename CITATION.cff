@@ -6,6 +6,26 @@ abstract: Reusable primitives for composing abstract quantum algorithms in Guppy
 authors:
   - family-names: Fitzpatrick
     given-names: Nathan
+  - family-names: Boyd
+    given-names: Gregory
+  - family-names: Leadbeater
+    given-names: Chiara
+  - family-names: Sorathia
+    given-names: Kesha
+  - family-names: Gowland
+    given-names: Duncan
+  - family-names: Marin
+    given-names: Gabriel
+  - family-names: Vandaele
+    given-names: Vivien
+  - family-names: Kargi
+    given-names: Cahit
+  - family-names: Bhayat
+    given-names: Ahmed
+  - family-names: Killick
+    given-names: Walden
+  - family-names: Macpherson
+    given-names: Callum
 repository-code: "https://github.com/Quantinuum/guppy-algorithms"
 license: Apache-2.0
 keywords:
