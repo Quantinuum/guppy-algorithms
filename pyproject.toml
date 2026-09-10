@@ -10,7 +10,7 @@ description = "Reusable primitives for composing abstract quantum algorithms in 
 readme = "README.md"
 license = "Apache-2.0"
 license-files = ["LICENSE"]
-requires-python = ">=3.12"
+requires-python = ">=3.12,<3.15"
 authors = [
     { name = "Nathan Fitzpatrick", email = "nathan.fitzpatrick@quantinuum.com" },
 ]
