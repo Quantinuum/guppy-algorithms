@@ -21,7 +21,3 @@ docs/jupyter_execute
 
 # Local Sphinx output
 docs/_build/
-
-# Local documents excluded from release history
-/README.md
-/CONTRIBUTING.md

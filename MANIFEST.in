@@ -1,2 +1,2 @@
-exclude README.md
-exclude CONTRIBUTING.md
+include README.md
+include CONTRIBUTING.md
