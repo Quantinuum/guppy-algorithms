@@ -84,10 +84,8 @@ Release Please manages versions and the changelog from Conventional Commit title
 Before `1.0.0`, `fix:` and `feat:` increment the patch version; a breaking change
 marked with `!` or a `BREAKING CHANGE:` footer increments the minor version.
 
-The unpublished baseline is `0.0.0`. The initial release commit uses the footer
-`Release-As: 0.1.0` to request the first public release. Never publish or tag
-`0.0.0`; review and merge the release PR when publication is ready. Reserve
-`Release-As: 1.0.0` for the deliberate decision to declare the public API stable.
+ Reserve `Release-As: 1.0.0` for the deliberate decision to declare the public 
+ API stable.
 
 ### Publishing a release
 
