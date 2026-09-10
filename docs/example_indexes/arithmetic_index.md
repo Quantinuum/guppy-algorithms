@@ -6,6 +6,7 @@ Reversible arithmetic operations on quantum registers.
 :maxdepth: 1
 :titlesonly:
 
+/examples/arithmetic/arithmetic
 /examples/arithmetic/ripple_carry_addition_example
 /examples/arithmetic/multiplier
 /examples/arithmetic/exponentiator
