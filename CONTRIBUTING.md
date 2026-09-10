@@ -84,7 +84,7 @@ Release Please manages versions and the changelog from Conventional Commit title
 Before `1.0.0`, `fix:` and `feat:` increment the patch version; a breaking change
 marked with `!` or a `BREAKING CHANGE:` footer increments the minor version.
 
- Reserve `Release-As: 1.0.0` for the deliberate decision to declare the public 
+ Reserve `Release-As: 1.0.0` for the deliberate decision to declare the public
  API stable.
 
 ### Publishing a release
