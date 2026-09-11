@@ -71,6 +71,9 @@ extensions = [
 # equations were already handled by sphinx-math-dollar.
 myst_enable_extensions = ["dollarmath"]
 
+# Resolve notebook links to sections, including third-level headings.
+myst_heading_anchors = 3
+
 # Render TikZ and Quantikz diagrams as SVGs in local and CI builds.
 tikz_proc_suite = "pdf2svg"
 tikz_tikzlibraries = "quantikz2"
