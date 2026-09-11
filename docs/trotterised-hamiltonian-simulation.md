@@ -118,7 +118,7 @@ simulation = ham_sim_trotter(
 ```
 
 See the {doc}`Trotter Hamiltonian-simulation notebook
-<examples/hamiltonian_simulation/ham_sim_trotter>` for the complete
+<examples/hamiltonian_simulation/ham_sim_trotter_demo>` for the complete
 construction, execution, and
 accuracy comparison.
 
