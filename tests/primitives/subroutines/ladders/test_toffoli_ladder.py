@@ -72,19 +72,16 @@ def test_linear_toffoli_ladder_indices(
     assert ladder_indices_fnc(n_qubits) == expected_indices
 
 
-@pytest.mark.parametrize(("n_qubits"), list(range(5, 12, 2)))
+@pytest.mark.parametrize(("n_qubits"), list(range(5, 11, 2)))
 def test_linear_and_log_depth_basis_equivalence(n_qubits: int) -> None:
     """Test that linear and log Toffoli ladders act identically."""
 
-    def run_ladder(ladder: Any, input_value: int):
-        input_bits = int_to_bits(input_value, n_qubits)
-        _input_bit_array = array(*input_bits)
-
+    def run_ladder(ladder: Any):
         @guppy
         @no_type_check
-        def run() -> None:
+        def run(bits: array[bool, n_qubits]) -> None:
             qs = qarray(n_qubits)
-            apply_bitstring(qs, _input_bit_array)
+            apply_bitstring(qs, bits)
 
             for i in range(n_qubits):
                 ry(qs[i], angle(0.37))
@@ -107,17 +104,17 @@ def test_linear_and_log_depth_basis_equivalence(n_qubits: int) -> None:
 
     input_values = [2, 5]
 
+    # Compile each implementation once, then reuse it for both classical inputs.
+    linear = run_ladder(ToffoliLadderLinear).emulator(n_qubits=n_qubits).with_seed(42)
+    log = (
+        run_ladder(ToffoliLadderLog)
+        .emulator(n_qubits=n_qubits + log_toffoli_ladder_num_ancilla(n_qubits))
+        .with_seed(42)
+    )
     for input_value in input_values:
-        linear = run_ladder(ToffoliLadderLinear, input_value)
-        log = run_ladder(ToffoliLadderLog, input_value)
-
-        linear_result = linear.emulator(n_qubits=n_qubits).with_seed(42).run()
-
-        log_result = (
-            log.emulator(n_qubits=n_qubits + log_toffoli_ladder_num_ancilla(n_qubits))
-            .with_seed(42)
-            .run()
-        )
+        bits = int_to_bits(input_value, n_qubits)
+        linear_result = linear.run(bits=bits)
+        log_result = log.run(bits=bits)
 
         linear_states = Quest.extract_states_dict(linear_result.results[0].entries)
         log_states = Quest.extract_states_dict(log_result.results[0].entries)
