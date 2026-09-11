@@ -172,6 +172,7 @@ def test_alias_workspace_is_not_clean_after_select() -> None:
     select = build_unary_iteration_select(data)
 
     @guppy
+    @no_type_check
     def main() -> None:
         index = qarray(3)
         alternative = qarray(3)
