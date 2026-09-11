@@ -14,6 +14,11 @@ Start with **Getting started** to compile a first program. The user guide
 introduces the library and its composition patterns; the notebooks provide
 runnable workflows, while the API reference documents individual components.
 
+**See the library in action:** {doc}`examples/block_encoding/block_encoding_demo`
+builds a Hamiltonian block encoding, adds a control, and transforms it with
+qubitisation and QSVT. Small numerical examples and LaTeX equations connect each
+operation to its encoded matrix, with an introduction to the THC workflow.
+
 
 ```{toctree}
 :maxdepth: 2

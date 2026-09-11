@@ -11,8 +11,7 @@ builders complement [guppy](https://docs.quantinuum.com/guppy/language_guide/lan
 highlights to explore register types, composition, and larger workflows.
 
 ```{toctree}
-:maxdepth: 1
-:titlesonly:
+:maxdepth: 4
 
 library-structure.md
 core-concepts.md
