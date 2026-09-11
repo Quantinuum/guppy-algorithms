@@ -131,6 +131,17 @@ def tuple_operation(qregs: tuple[qubit, qubit]) -> None:
     cx(qregs[0], qregs[1])
 ```
 
+Starting from $|00\rangle$, this tuple operation prepares a Bell pair:
+
+```{tikz}
+:alt: A Hadamard on the first qubit followed by a controlled X to the second prepares a Bell pair from two zero qubits.
+
+\begin{tikzcd}[column sep=0.7cm]
+\lstick{$q_0: |0\rangle$} & \gate{H} & \ctrl{1} & \qw \\
+\lstick{$q_1: |0\rangle$} & \qw & \targ{} & \qw
+\end{tikzcd}
+```
+
 For a named bundle of several quantum registers, `Regs` can be a Guppy struct:
 
 ```python
