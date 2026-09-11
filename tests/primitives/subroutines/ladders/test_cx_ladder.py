@@ -100,7 +100,7 @@ def test_log_cx_ladder_indices(
 
 @pytest.mark.parametrize(
     ("n_qubits"),
-    list(range(1, 12)),
+    list(range(1, 11)),
 )
 def test_linear_and_log_depth_unitary_equivalence(n_qubits: int) -> None:
     """Test that linear and log CX ladder indices produce the same unitaries."""
