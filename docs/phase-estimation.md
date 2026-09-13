@@ -1,3 +1,12 @@
+---
+file_format: mystnb
+kernelspec:
+  name: python3
+mystnb:
+  execution_mode: force
+  execution_timeout: 120
+---
+
 # Phase estimation
 
 ## Phase estimation over different register shapes
@@ -28,7 +37,7 @@ inverse QFT converts it into a binary estimate:
 Prepare the Hadamards before calling `qpe`; the function applies the controlled
 powers and inverse QFT. A register wire may represent several qubits.
 
-```python
+```{code-cell} ipython3
 from guppylang import guppy
 from guppylang.std.builtins import Function, array, nat
 from guppylang.std.quantum import qubit
@@ -56,7 +65,7 @@ For Trotterized QPE, each controlled $U$ box in the circuit above is one
 controlled Trotter step. That step is built from the controlled Pauli
 exponentials described in {doc}`trotterised-hamiltonian-simulation`.
 
-```python
+```{code-cell} ipython3
 from guppylang import guppy
 from guppylang.std.builtins import array
 from guppylang.std.quantum import qubit
@@ -95,7 +104,7 @@ def trotter_power_oracle(
 Qubitization needs both a PREPARE register and the target registers used by its
 block encoding. They can be grouped into one generic register value:
 
-```python
+```{code-cell} ipython3
 @guppy.struct
 class QubitizationRegs[n_prepare: nat, TargetRegs]:
     prep_qreg: array[qubit, n_prepare]

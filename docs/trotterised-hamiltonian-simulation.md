@@ -1,3 +1,12 @@
+---
+file_format: mystnb
+kernelspec:
+  name: python3
+mystnb:
+  execution_mode: force
+  execution_timeout: 120
+---
+
 # Trotterised Hamiltonian simulation
 
 Trotterization approximates Hamiltonian time evolution by applying
@@ -20,7 +29,7 @@ H=\sum_{j=1}^{m}a_jP_j,
 P_j\in\{I,X,Y,Z\}^{\otimes n}.
 $
 
-```python
+```{code-cell} ipython3
 import zixy.qubit.pauli as zqp
 
 pauli_string = zqp.String.from_str("Z0 X1", 2)
@@ -44,7 +53,7 @@ $
 U_P(\theta)=e^{-i\theta P/2}.
 $
 
-```python
+```{code-cell} ipython3
 from guppyalgos.primitives.pauli.pauli_exp import cntrl_pauli_exp, pauli_exp
 
 pauli_gadget = pauli_exp(pauli_string, n_qubits=2)
@@ -106,7 +115,7 @@ e^{-iHt}
 \text{error}=O\!\left(\frac{t^2}{r}\right).
 $
 
-```python
+```{code-cell} ipython3
 from guppyalgos.algorithms.time_evolution.trotter import ham_sim_trotter, trotter_first_order
 
 n_state_qubits = len(hamiltonian.qubits)

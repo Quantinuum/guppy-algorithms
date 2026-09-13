@@ -1,3 +1,12 @@
+---
+file_format: mystnb
+kernelspec:
+  name: python3
+mystnb:
+  execution_mode: force
+  execution_timeout: 120
+---
+
 # Measurement
 
 - Prepare a state, choose a Pauli observable, and sample its measurement circuit.
@@ -32,7 +41,7 @@ $$
 \mathrm{SE}=\sqrt{\frac{1-\widehat{\langle P\rangle}^2}{N}}.
 $$
 
-```python
+```{code-cell} ipython3
 from guppyalgos.primitives.measurement import estimate_expectation_from_binary_samples
 
 estimate = estimate_expectation_from_binary_samples({False: 750, True: 250})
