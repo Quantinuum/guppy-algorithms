@@ -9,14 +9,11 @@ mystnb:
 
 # Library structure and philosophy
 
-## Alpha release
+## Experimental releases
 
-Guppy Algorithms is currently an alpha release.
-
-- The public API is subject to change as the library and Guppy language mature.
-- Names, signatures, and module locations may change between releases.
-- Pin the package version for reproducible projects and check the release notes
-  before upgrading.
+Any release before version 1.0.0 is experimental, and the API may change between
+releases. Pin the package version for reproducible projects and check the
+release notes before upgrading.
 
 Guppy Algorithms is built on the Guppy language framework. If Guppy is new to
 you, start with the
@@ -58,6 +55,10 @@ guppyalgos/
 - `primitives/` contains small reusable components from which algorithms are
   assembled. Most are Guppy functions parameterized by register types and
   compile-time sizes; a few require Python-side construction.
+  - `qft` is one generic Guppy function that specializes to the compile-time
+    width of its input register.
+  - `fanout_basic` and `fanout_log` share the same typed interface, allowing an
+    algorithm to choose a sequential or logarithmic-depth implementation.
 
 - `gate_decompositions/` contains implementations or close variants of gates
   also available in Guppy's standard library; use it when an algorithm needs a
