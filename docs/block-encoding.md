@@ -1,3 +1,12 @@
+---
+file_format: mystnb
+kernelspec:
+  name: python3
+mystnb:
+  execution_mode: force
+  execution_timeout: 120
+---
+
 # Block encoding
 
 A block encoding places a matrix inside a larger unitary. This lets us use
@@ -55,7 +64,7 @@ and UNPREPARE is $R_y(-\theta)$:
 The code below builds this circuit using `multiplexor_prep` for the rotation
 and `build_single_cntrl_select` for the two controlled Pauli gates.
 
-```python
+```{code-cell} ipython3
 import zixy.qubit.pauli as zqp
 from guppylang import guppy
 from guppylang.std.builtins import array, comptime, dagger
@@ -111,7 +120,7 @@ zero; the filled control selects Y at address one.
 `multiplexor_prep` supplies the preparation above; `Reflection[1, 0]`
 supplies the one-qubit reflection. `Qubitization` puts them together:
 
-```python
+```{code-cell} ipython3
 from guppyalgos.algorithms.block_encoding.qubitization import Qubitization
 from guppyalgos.primitives.subroutines.reflection import Reflection
 from guppyalgos.primitives.gate_decompositions.cnx.cnx import cnx
@@ -140,7 +149,7 @@ $$
 Repeated steps encode Chebyshev polynomials. In particular,
 $\langle0^a|W^2|0^a\rangle=2(H/\lambda)^2-I$:
 
-```python
+```{code-cell} ipython3
 @guppy
 def walk_squared(prep_qreg: array[qubit, 1], qreg: array[qubit, 1]) -> None:
     Qubitization(
@@ -153,7 +162,7 @@ def walk_squared(prep_qreg: array[qubit, 1], qreg: array[qubit, 1]) -> None:
 `QubitizationCntrl` adds an external control to SELECT and the reflection.
 PREPARE and UNPREPARE remain unconditional and cancel when the control is zero.
 
-```python
+```{code-cell} ipython3
 from guppyalgos.algorithms.block_encoding.lcu import (
     LCUCntrl, build_cntrl_single_cntrl_select,
 )
@@ -203,7 +212,7 @@ avoid rebuilding a complete multi-control for every term.
 Here $U_0=X$, $U_1=Z$, $U_2=Y$ and $U_3=I$. The builder supplies the
 address circuit around these controlled operations:
 
-```python
+```{code-cell} ipython3
 from guppyalgos.algorithms.select import build_select_unary_from_data
 from guppyalgos.primitives.pauli import pauli_to_cntrl_gate
 
@@ -252,7 +261,7 @@ True]`, the active address flag controls these two gates:
 The table is fixed when the circuit is built. Each row below lists bits by
 qubit index; the repository default is little endian.
 
-```python
+```{code-cell} ipython3
 from guppyalgos.algorithms.select.qrom import qrom_unary_iteration
 from guppyalgos.primitives.subroutines.fanout import (
     fanout_basic, fanout_log, fanout_measurement_parity,
@@ -280,7 +289,7 @@ twice restores the original data, provided the address is unchanged.
 Change `fanout_op` to choose how the active flag reaches the selected data
 qubits. The table and the QROM call signature stay the same:
 
-```python
+```{code-cell} ipython3
 lookup_log = qrom_unary_iteration(words, fanout_op=fanout_log)
 lookup_measurement = qrom_unary_iteration(words, fanout_op=fanout_measurement_parity)
 
@@ -322,7 +331,7 @@ $$
 p(H/\lambda)=I-2(H/\lambda)^2.
 $$
 
-```python
+```{code-cell} ipython3
 from guppyalgos.algorithms.block_encoding.qsvt import QSVT
 
 phases = [1.0, 1.0]

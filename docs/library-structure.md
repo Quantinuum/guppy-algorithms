@@ -1,3 +1,12 @@
+---
+file_format: mystnb
+kernelspec:
+  name: python3
+mystnb:
+  execution_mode: force
+  execution_timeout: 120
+---
+
 # Library structure and philosophy
 
 ## Alpha release
@@ -66,13 +75,13 @@ guppyalgos/
 At the user level, pass a Zixy Hamiltonian to `trotter_first_order`, then call
 the resulting step from an ordinary Guppy function:
 
-```python
+```{code-cell} ipython3
 from guppylang import guppy
 from guppylang.std.builtins import array
 from guppylang.std.quantum import qubit
 import zixy.qubit.pauli as zqp
 
-from guppyalgos.trotter import trotter_first_order
+from guppyalgos.algorithms.time_evolution.trotter import trotter_first_order
 
 
 hamiltonian = zqp.RealTermSum.from_str(
@@ -97,12 +106,12 @@ def apply_one_trotter_step(state_qreg: array[qubit, 2]) -> None:
 QFT does not need a Python builder. Its register width is part of the Guppy
 type:
 
-```python
+```{code-cell} ipython3
 from guppylang import guppy
 from guppylang.std.builtins import array
 from guppylang.std.quantum import qubit
 
-from guppyalgos.qft import qft
+from guppyalgos.primitives.subroutines.qft import qft
 
 
 @guppy
