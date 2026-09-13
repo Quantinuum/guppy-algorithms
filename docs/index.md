@@ -6,7 +6,7 @@ library of reusable quantum-algorithm components built on
 type-safe guppy primitives with Python builders for algorithms that start from
 classical data.
 
-The API is experimental before version 1.0 and may change between releases.
+Any release before version 1.0.0 is experimental, and the API may change between releases.
 Pin the package version for reproducible work and review the
 [changelog](https://github.com/Quantinuum/guppy-algorithms/blob/main/CHANGELOG.md) before upgrading.
 

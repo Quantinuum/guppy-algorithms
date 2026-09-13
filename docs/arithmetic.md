@@ -1,3 +1,12 @@
+---
+file_format: mystnb
+kernelspec:
+  name: python3
+mystnb:
+  execution_mode: force
+  execution_timeout: 120
+---
+
 # Arithmetic
 
 - Compute sums, comparisons, products, and powers directly on quantum registers.
@@ -25,7 +34,7 @@ The snippets below share these imports and define functions to call from a
 [guppy](https://docs.quantinuum.com/guppy/language_guide/language_guide_index.html)
 circuit.
 
-```python
+```{code-cell} ipython3
 from guppylang import guppy
 from guppylang.std.builtins import array
 from guppylang.std.quantum import qubit
@@ -78,7 +87,7 @@ $$
 \longmapsto |c\rangle|a\rangle|(b+ca)\bmod 2^n\rangle.
 $$
 
-```python
+```{code-cell} ipython3
 @guppy
 def controlled_add(
     control: qubit, a_qreg: array[qubit, 3], b_qreg: array[qubit, 3],
@@ -99,7 +108,7 @@ $$
 \longmapsto |a\rangle|b\rangle|z\oplus[a<b]\rangle.
 $$
 
-```python
+```{code-cell} ipython3
 from guppyalgos.primitives.arithmetic.comparator import comparator_vandaele
 
 less_than = comparator_vandaele(3)
@@ -122,7 +131,7 @@ def compare(a_qreg: array[qubit, 3], b_qreg: array[qubit, 3], flag: qubit) -> No
 - `cca_incrementer` uses conditionally clean ancillas; linear-depth
   temporary-AND implementations and controlled variants are also available.
 
-```python
+```{code-cell} ipython3
 from guppyalgos.primitives.arithmetic.incrementer.incrementer_cca import cca_incrementer
 
 
@@ -143,7 +152,7 @@ $$
 \longmapsto |a\rangle|b\rangle|(p+ab)\bmod 2^n\rangle.
 $$
 
-```python
+```{code-cell} ipython3
 @guppy
 def multiply(
     a_qreg: array[qubit, 3], b_qreg: array[qubit, 3], product_qreg: array[qubit, 3],
@@ -166,7 +175,7 @@ $$
 |x\rangle|1\rangle\longmapsto|x\rangle|b^x\bmod 2^n\rangle.
 $$
 
-```python
+```{code-cell} ipython3
 @guppy
 def power_of_three(exponent_qreg: array[qubit, 2], result_qreg: array[qubit, 4]) -> None:
     exponentiator_ripple_gidney_mod(exponent_qreg, result_qreg, 3)

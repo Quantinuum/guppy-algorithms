@@ -2,6 +2,9 @@
 file_format: mystnb
 kernelspec:
   name: python3
+mystnb:
+  execution_mode: force
+  execution_timeout: 120
 ---
 
 # Getting started
@@ -46,7 +49,7 @@ $$
 \frac{1}{2}\left(|00\rangle+|01\rangle+|10\rangle+|11\rangle\right).
 $$
 
-```python
+```{code-cell} ipython3
 from guppylang import guppy
 from guppylang.std.quantum import discard_array
 

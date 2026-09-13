@@ -1,3 +1,12 @@
+---
+file_format: mystnb
+kernelspec:
+  name: python3
+mystnb:
+  execution_mode: force
+  execution_timeout: 120
+---
+
 # Testing quantum routines
 
 Testing is a key part of Guppy Algorithms, even though it is not a runtime
@@ -23,7 +32,7 @@ snippets in order; later examples reuse earlier imports.
 uv sync --extra dev-dependencies
 ```
 
-```python
+```{code-cell} ipython3
 import numpy as np
 from guppylang import guppy
 from guppylang.std.builtins import array
@@ -45,7 +54,7 @@ from tests.helpers import (
 Prepare the Bell state $(|00\rangle + |11\rangle)/\sqrt{2}$ and compare its
 amplitudes with the expected vector.
 
-```python
+```{code-cell} ipython3
 @guppy
 def bell_state() -> None:
     state = qarray(2)
@@ -73,7 +82,7 @@ assert_allclose_ignorephase(actual, expected)
 A state test checks one input. A unitary test checks the matrix whose columns
 are the outputs for every computational-basis input.
 
-```python
+```{code-cell} ipython3
 @guppy
 def phase_flip(state: array[qubit, 1]) -> None:
     z(state[0])
@@ -98,7 +107,7 @@ Post-selection means keeping only the branch with specified measurement
 outcomes. Here, the ancilla and system form a Bell pair: selecting ancilla
 outcome `1` leaves the system in $|1\rangle$, with probability $1/2$.
 
-```python
+```{code-cell} ipython3
 @guppy
 def heralded_state() -> None:
     ancilla = qarray(1)
@@ -139,7 +148,7 @@ Use `get_unitary_projected` to check a selected branch for every system input.
 This example flips the system when the ancilla is `1`; selecting that outcome
 extracts $X/\sqrt{2}$.
 
-```python
+```{code-cell} ipython3
 @guppy
 def heralded_flip(
     ancilla: array[qubit, 1], state: array[qubit, 1],
@@ -172,7 +181,7 @@ Selene's `QuantumReplay` supplies chosen measurement outcomes during simulation.
 Use it to test paths that would otherwise depend on random shots. This small
 retry loop models the success flag of a repeat-until-success routine.
 
-```python
+```{code-cell} ipython3
 from guppylang.std.builtins import output
 from guppylang.std.quantum import measure
 from selene_sim import QuantumReplay, Quest

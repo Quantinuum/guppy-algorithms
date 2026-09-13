@@ -1,3 +1,12 @@
+---
+file_format: mystnb
+kernelspec:
+  name: python3
+mystnb:
+  execution_mode: force
+  execution_timeout: 120
+---
+
 # Phase estimation
 
 ## Phase estimation over different register shapes
@@ -28,7 +37,7 @@ inverse QFT converts it into a binary estimate:
 Prepare the Hadamards before calling `qpe`; the function applies the controlled
 powers and inverse QFT. A register wire may represent several qubits.
 
-```python
+```{code-cell} ipython3
 from guppylang import guppy
 from guppylang.std.builtins import Function, array, nat
 from guppylang.std.quantum import qubit
@@ -56,7 +65,22 @@ For Trotterized QPE, each controlled $U$ box in the circuit above is one
 controlled Trotter step. That step is built from the controlled Pauli
 exponentials described in {doc}`trotterised-hamiltonian-simulation`.
 
-```python
+For $H=\sum_j h_jP_j$, one requested power repeats the complete controlled
+product formula. The phase qubit controls every Pauli exponential:
+
+```{tikz}
+:alt: A phase qubit controls a sequence of Pauli exponentials on the state register, forming a controlled Trotter step that is repeated p times.
+
+\begin{tikzcd}[column sep=0.55cm]
+\lstick{$|c\rangle$} & \ctrl{1} & \ctrl{1} & \cdots & \ctrl{1} & \qw \\
+\lstick{$|\psi\rangle$} & \gate{e^{-i\delta h_0P_0}}\qwbundle{} & \gate{e^{-i\delta h_1P_1}} & \cdots & \gate{e^{-i\delta h_{L-1}P_{L-1}}} & \qw
+\end{tikzcd}
+```
+
+Here $p$ is the integer supplied by QPE and $\delta$ is `time_step` in the
+library convention used below.
+
+```{code-cell} ipython3
 from guppylang import guppy
 from guppylang.std.builtins import array
 from guppylang.std.quantum import qubit
@@ -95,7 +119,23 @@ def trotter_power_oracle(
 Qubitization needs both a PREPARE register and the target registers used by its
 block encoding. They can be grouped into one generic register value:
 
-```python
+One controlled walk expands into the operations used on the block-encoding
+page. PREPARE and UNPREPARE are unconditional; SELECT and the reflection carry
+the QPE control. When $c=0$, PREPARE and UNPREPARE cancel:
+
+```{tikz}
+:alt: A control qubit controls SELECT and the preparation-state reflection in a qubitization walk. PREPARE and PREPARE dagger are unconditional on the preparation register.
+
+\begin{tikzcd}[column sep=0.55cm]
+\lstick{$|c\rangle$} & \qw & \ctrl{1} & \qw & \ctrl{1} & \qw \\
+\lstick{$|0^a\rangle_p$} & \gate{\mathrm{PREPARE}}\qwbundle{} & \gate[2]{\mathrm{SELECT}} & \gate{\mathrm{PREPARE}^{\dagger}} & \gate{R} & \qw \\
+\lstick{$|\psi\rangle$} & \qw\qwbundle{} & \qw & \qw & \qw & \qw
+\end{tikzcd}
+```
+
+The power oracle repeats this complete controlled walk $p$ times.
+
+```{code-cell} ipython3
 @guppy.struct
 class QubitizationRegs[n_prepare: nat, TargetRegs]:
     prep_qreg: array[qubit, n_prepare]
@@ -157,11 +197,41 @@ For three phase qubits, the structure is:
 - Energy-sampling probabilities depend on the input's eigenstate overlaps;
   QPE does not itself prepare the ground state.
 
-### Decode the sampled phase
+## Decode the sampled phase
 
 The repository's `binary_fraction` helper expresses the phase in half-turns:
-$W|\omega\rangle=e^{i\pi\phi}|\omega\rangle$, with $0\leq\phi<2$.
-Thus $\phi$ is twice the turn-based phase used in the opening QPE equation.
+$U|\omega\rangle=e^{i\pi\phi}|\omega\rangle$, with $0\leq\phi<2$.
+The conversion from $\phi$ depends on the power oracle.
+
+### Trotterized Hamiltonian simulation
+
+For the repository's time-evolution convention,
+
+$$
+U(t)=e^{-i\pi tH/2},\qquad
+U(t)|E\rangle=e^{-i\pi tE/2}|E\rangle.
+$$
+
+Comparing the exponent with $e^{i\pi\phi}$ gives
+
+$$
+\phi=-\frac{tE}{2}\pmod 2,
+\qquad
+E=-\frac{2(\phi+2k)}{t}.
+$$
+
+The integer $k$ selects the correct phase-wrapping branch. The helper
+`phase_to_energy_qpe(phi, total_time, phase_wraps=k)` performs this conversion.
+
+For example, the {doc}`phase-estimation demo
+<examples/phase_estimation/phase_estimation_demo>` uses
+$H=(X+Z)/2$, its ground energy $E=-1/\sqrt2$, and $t=1$. The exact phase is
+$1/(2\sqrt2)\approx0.3536$. Six phase qubits resolve the nearby bin
+$11/32$, giving $E\approx-0.6875$.
+
+### Qubitized phase estimation
+
+For the qubitization walk $W$, the sampled phase instead satisfies
 
 $$
 E=-\lambda\cos(\pi\phi),
