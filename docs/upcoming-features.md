@@ -1,3 +1,12 @@
+---
+file_format: mystnb
+kernelspec:
+  name: python3
+mystnb:
+  execution_mode: force
+  execution_timeout: 120
+---
+
 # Upcoming features
 
 Guppy Algorithms is under active development. This page describes planned
@@ -9,7 +18,7 @@ Guppy's built-in `control` and `dagger` modifiers already work well for simple,
 straight-line unitary functions. Mark the function as `unitary` so Guppy checks
 that it can be both controlled and inverted:
 
-```python
+```{code-cell} ipython3
 from guppylang import guppy
 from guppylang.std.builtins import control, dagger
 from guppylang.std.quantum import h, qubit, s

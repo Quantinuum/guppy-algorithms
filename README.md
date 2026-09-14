@@ -7,7 +7,7 @@ The `guppyalgos` package includes quantum arithmetic, state preparation, QROM,
 block encoding, Hamiltonian simulation, and phase estimation. It's reusable
 components let you choose circuit implementations when assembling an algorithm.
 
-The API is experimental before version 1.0 and may change between releases.
+Any release before version 1.0.0 is experimental, and the API may change between releases.
 Pin the package version for reproducible work and review the
 [changelog](CHANGELOG.md) before upgrading.
 

@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "guppyalgos"
-version = "0.0.0"
+version = "0.1.0"
 description = "Reusable primitives for composing abstract quantum algorithms in Guppy"
 readme = "README.md"
 license = "Apache-2.0"
@@ -35,7 +35,7 @@ dev-dependencies = [
     "pandas-stubs",
     "ipykernel>=7.3.0",
     "pytest-notebook>=0.11.0",
-    "pytest>=8.3.3,<9",
+    "pytest>=9.0.3,<10",
     "pytest-lazy-fixtures",
     "sphinx==9.1.0",
     "pytest-xdist",

@@ -156,13 +156,15 @@ def test_ccz_gate(
 
 @pytest.mark.parametrize(
     ("input_state", "ccu"),
-    product(
-        [
-            # tuples are (control_1, control_2, target)
-            (1, 1, 0),
-            (1, 1, 1),
-        ],
-        [ccx, ccy, ccz],
+    list(
+        product(
+            [
+                # tuples are (control_1, control_2, target)
+                (1, 1, 0),
+                (1, 1, 1),
+            ],
+            [ccx, ccy, ccz],
+        )
     ),
 )
 def test_ccu_gate_are_self_adjoint(
