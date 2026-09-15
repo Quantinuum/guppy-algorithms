@@ -43,7 +43,6 @@ guppyalgos/
 │   ├── state_preparation/
 │   └── subroutines/
 ├── testing/
-│   └── __init__.py
 └── utils/
     ├── guppy/
     └── python/
