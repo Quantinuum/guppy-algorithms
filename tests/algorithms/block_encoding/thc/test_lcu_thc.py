@@ -182,4 +182,4 @@ def test_built_thc_cntrl_lcu_compiles() -> None:
         discard_array(target_regs.spin_down)
         discard_array(prep_regs.phase_gradient)
 
-    main.check()
+    main.compile()
