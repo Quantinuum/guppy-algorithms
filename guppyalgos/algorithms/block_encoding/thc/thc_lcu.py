@@ -61,7 +61,7 @@ def load_select_registers[n_alias_q: nat, n_index_q: nat, n_select_data: nat](
     select_data_loader: Function[
         [
             array[qubit, n_alias_q],
-            array[qubit, n_select_data],  # ty: ignore[unsupported-operator]
+            array[qubit, n_select_data],
         ],
         None,
     ],
