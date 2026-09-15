@@ -42,7 +42,8 @@ guppyalgos/
 │   ├── rotations/
 │   ├── state_preparation/
 │   └── subroutines/
-├── testing.py
+├── testing/
+│   └── __init__.py
 └── utils/
     ├── guppy/
     └── python/
@@ -68,7 +69,7 @@ guppyalgos/
   but do not fit a more specific primitive category.
 - `errors/` contains shared error definitions used to report invalid classical
   inputs or unsupported constructions consistently.
-- `testing.py` contains statevector and unitary inspection helpers shared by
+- `testing/` contains statevector and unitary inspection helpers shared by
   the test suite and example notebooks.
 - `utils/guppy/` contains helpers usable inside Guppy programs, such as
   register utilities, while `utils/python/` contains host-side helpers for
