@@ -4,7 +4,7 @@ from typing import no_type_check
 
 import numpy as np
 from guppylang import guppy
-from guppylang.std.builtins import array
+from guppylang.std.builtins import array, comptime
 from guppylang.std.quantum import discard, discard_array, qubit
 
 from guppyalgos.primitives.gate_decompositions.cnx import cnx
@@ -118,7 +118,7 @@ def test_built_thc_cntrl_lcu_compiles() -> None:
     @no_type_check
     def unprepare(regs: THCPrepareRegs) -> None:
         load_select_registers(
-            select_qrom,
+            select_qrom[array[qubit, comptime(2 * N_INDEX_QUBITS + 2)]],
             regs.alias_sampling.index,
             regs.select,
         )
