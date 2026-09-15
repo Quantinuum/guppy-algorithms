@@ -1,4 +1,4 @@
-"""Helper functions for testing quantum algorithms."""
+"""Helpers for inspecting Guppy programs with a statevector simulator."""
 
 from __future__ import annotations
 from guppylang.std.platform import barrier
